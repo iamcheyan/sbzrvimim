@@ -1,4 +1,4 @@
-# sbzr.vimi.m - Neovim 中文输入法插件
+# sbzr.nvim.im - Neovim 中文输入法插件
 
 基于 [ZSaberLv0/ZFVimIM](https://github.com/ZSaberLv0/ZFVimIM)，适配 Neovim 0.11+。
 
@@ -15,15 +15,15 @@
 
 ### 1. 安装插件
 
-> 💡 **最简单方式**：复制配置文件 [`assast/config/sbzr.vimi.m.lua`](assast/config/sbzr.vimi.m.lua) 到 `~/.config/nvim/lua/plugins/sbzr.vimi.m.lua`
+> 💡 **最简单方式**：复制配置文件 [`assast/config/sbzr.nvim.im.lua`](assast/config/sbzr.nvim.im.lua) 到 `~/.config/nvim/lua/plugins/sbzr.nvim.im.lua`
 
 或者手动创建配置文件：
 
 ```lua
--- ~/.config/nvim/lua/plugins/sbzr.vimi.m.lua
+-- ~/.config/nvim/lua/plugins/sbzr.nvim.im.lua
 return {
   {
-    "iamcheyan/ZFVimIM",
+    "iamcheyan/sbzr.nvim.im",
     lazy = false,
   },
 }
@@ -94,6 +94,17 @@ return {
 
 ## 配置
 
+### 文件路径说明
+
+插件的文件存储路径如下：
+
+- **数据库文件**：`~/.config/nvim/sbzr.nvim.im.db/` 目录
+  - 例如：`~/.config/nvim/sbzr.nvim.im.db/sbzr.db`
+- **词库文件（YAML）**：`~/.local/share/nvim/lazy/sbzr.nvim.im/dict/` 目录
+  - 例如：`~/.local/share/nvim/lazy/sbzr.nvim.im/dict/sbzr.yaml`
+- **缓存文件**：`~/.vim_cache/sbzr_nvim_im/` 目录
+- **频率文件**：`~/.local/share/nvim/sbzr_nvim_im_word_freq.txt`
+
 ### 高级配置
 
 ```lua
@@ -162,7 +173,7 @@ ceshi	测试	测时
 
 ```vim
 " 检查词库文件是否存在
-:lua print(vim.fn.filereadable(vim.fn.stdpath("data") .. "/lazy/ZFVimIM/dict/sbzr.yaml"))
+:lua print(vim.fn.filereadable(vim.fn.stdpath("data") .. "/lazy/sbzr.nvim.im/dict/sbzr.yaml"))
 
 " 查看错误信息
 :messages
@@ -193,4 +204,5 @@ ceshi	测试	测时
 ## 相关链接
 
 - 原项目：[ZSaberLv0/ZFVimIM](https://github.com/ZSaberLv0/ZFVimIM)
-- 适配版本：[iamcheyan/ZFVimIM](https://github.com/iamcheyan/ZFVimIM)
+- 本插件仓库：[iamcheyan/sbzr.nvim.im](https://github.com/iamcheyan/sbzr.nvim.im)
+- 基础适配版本：[iamcheyan/ZFVimIM](https://github.com/iamcheyan/ZFVimIM)

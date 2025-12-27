@@ -22,7 +22,7 @@ endif
 " ============================================================
 " Get database directory path (in user config directory)
 function! s:ZFVimIM_getDbDir()
-    let dbDir = stdpath('config') . '/zfvimim_db'
+    let dbDir = stdpath('config') . '/sbzr.nvim.im.db'
     " Ensure directory exists
     if !isdirectory(dbDir)
         call mkdir(dbDir, 'p')
@@ -31,7 +31,7 @@ function! s:ZFVimIM_getDbDir()
 endfunction
 
 " Get database file path from YAML file path
-" Database files are stored in ~/.config/nvim/zfvimim_db/
+" Database files are stored in ~/.config/nvim/sbzr.nvim.im.db/
 function! s:ZFVimIM_getDbPath(yamlPath)
     if empty(a:yamlPath)
         return ''
@@ -86,7 +86,7 @@ function! s:ZFVimIM_getYamlPath(dbPath)
         let pluginDir = sfileDir
     else
         " Fallback to stdpath (LazyVim installed location)
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     endif
     let dictDir = pluginDir . '/dict'
     let yamlPath = dictDir . '/' . yamlName
@@ -118,7 +118,7 @@ function! s:ZFVimIM_autoLoadDict()
         let pluginDir = sfileDir
     else
         " Fallback to stdpath (LazyVim installed location)
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     endif
     let dictDir = pluginDir . '/dict'
     
@@ -167,11 +167,11 @@ function! s:ZFVimIM_autoLoadDict()
                         \ })
             " Show loading message if we just imported
             if exists('importSuccess') && importSuccess
-                echom '[sbzr.vimi.m] 正在加载词库: ' . fnamemodify(dictPath, ':t')
+                echom '[sbzr.nvim.im] 正在加载词库: ' . fnamemodify(dictPath, ':t')
             endif
             call ZFVimIM_dbLoad(db, actualDbPath)
             if exists('importSuccess') && importSuccess
-                echom '[sbzr.vimi.m] ✅ 输入法已重新加载完成'
+                echom '[sbzr.nvim.im] ✅ 输入法已重新加载完成'
             endif
             " Store actual DB path in implData (not TXT path)
             if !has_key(db, 'implData')
@@ -202,7 +202,7 @@ function! s:ZFVimIM_autoLoadDict()
                                     if get(db, 'name', '') ==# dictName
                                         call ZFVimIM_dbSearchCacheClear(db)
                                         call ZFVimIM_dbLoad(db, actualDbPath)
-                                        echom '[sbzr.vimi.m] ✅ 输入法已重新加载完成'
+                                        echom '[sbzr.nvim.im] ✅ 输入法已重新加载完成'
                                         break
                                     endif
                                 endfor
@@ -241,27 +241,27 @@ function! s:ZFVimIM_importDb(yamlPath, dbPath, force)
     " Get Python command
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     if !executable(pythonCmd)
-        echom '[sbzr.vimi.m] Python not found, cannot auto-import dictionary'
+        echom '[sbzr.nvim.im] Python not found, cannot auto-import dictionary'
         return 0
     endif
     
     " Get script path
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
     endif
     let scriptPath = pluginDir . '/misc/import_txt_to_db.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] Import script not found: ' . scriptPath
+        echom '[sbzr.nvim.im] Import script not found: ' . scriptPath
         return 0
     endif
     
     " Show importing message
     if a:force
-        echom '[sbzr.vimi.m] 正在重新导入词库: ' . fnamemodify(a:yamlPath, ':t')
+        echom '[sbzr.nvim.im] 正在重新导入词库: ' . fnamemodify(a:yamlPath, ':t')
     else
-        echom '[sbzr.vimi.m] 正在自动导入词库: ' . fnamemodify(a:yamlPath, ':t')
+        echom '[sbzr.nvim.im] 正在自动导入词库: ' . fnamemodify(a:yamlPath, ':t')
     endif
     
     " Run import script
@@ -270,15 +270,15 @@ function! s:ZFVimIM_importDb(yamlPath, dbPath, force)
     
     " Check if import was successful
     if v:shell_error == 0 && filereadable(a:dbPath)
-        echom '[sbzr.vimi.m] ✅ 词库导入成功: ' . fnamemodify(a:yamlPath, ':t')
+        echom '[sbzr.nvim.im] ✅ 词库导入成功: ' . fnamemodify(a:yamlPath, ':t')
         if a:force
-            echom '[sbzr.vimi.m] 正在重新加载输入法...'
+            echom '[sbzr.nvim.im] 正在重新加载输入法...'
         endif
         return 1
     else
-        echom '[sbzr.vimi.m] ❌ 词库导入失败: ' . fnamemodify(a:yamlPath, ':t')
+        echom '[sbzr.nvim.im] ❌ 词库导入失败: ' . fnamemodify(a:yamlPath, ':t')
         if !empty(result)
-            echom '[sbzr.vimi.m] 错误信息: ' . result
+            echom '[sbzr.nvim.im] 错误信息: ' . result
         endif
         return 0
     endif
@@ -2168,7 +2168,7 @@ function! s:addWord(dbId, key, word)
         let dictPath = db['implData']['dictPath']
     else
         " Try to get from autoLoadDict logic
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -2219,7 +2219,7 @@ function! s:asyncSaveDict(db, dictPath)
         endif
         
         " Get script path
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/misc')
             let pluginDir = sfileDir
@@ -2242,7 +2242,7 @@ function! s:asyncSaveDict(db, dictPath)
                 let failedCount += 1
                 " Log error for debugging (only if not silent)
                 if !exists('g:ZFVimIM_silent_save') || !g:ZFVimIM_silent_save
-                    echom '[sbzr.vimi.m] Failed to add word: ' . wordItem['word'] . ' (' . result . ')'
+                    echom '[sbzr.nvim.im] Failed to add word: ' . wordItem['word'] . ' (' . result . ')'
                 endif
             endif
         endfor
@@ -2285,7 +2285,7 @@ function! s:removeWord(dbId, key, word)
         let dictPath = db['implData']['dictPath']
     else
         " Try to get from autoLoadDict logic
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -2711,7 +2711,7 @@ let s:freq_file_path = ''
 function! s:initWordFrequency()
     " Initialize frequency file path
     if empty(s:freq_file_path)
-        let s:freq_file_path = stdpath('data') . '/ZFVimIM_word_freq.txt'
+        let s:freq_file_path = stdpath('data') . '/sbzr_nvim_im_word_freq.txt'
         " Fallback to plugin directory if stdpath doesn't work
         if !isdirectory(stdpath('data'))
             let s:freq_file_path = expand('<sfile>:p:h:h') . '/word_freq.txt'
@@ -2759,7 +2759,7 @@ function! s:updateWordFrequencyInDb(key, word, increment)
     " Update word frequency in database
     " Get database file path
     let dictPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -3288,7 +3288,7 @@ augroup END
 function! s:cleanupDictionaryOnExit()
     " Get dictionary file path
     let dictPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -3505,7 +3505,7 @@ function! ZFVimIM_cleanupDictionary()
         endif
     else
         " Try to get from autoLoadDict logic
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -3523,13 +3523,13 @@ function! ZFVimIM_cleanupDictionary()
     endif
     
     " Get script path
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict') && isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
     else
         if !isdirectory(pluginDir . '/misc')
-            let altPath = stdpath('config') . '/lazy/ZFVimIM'
+            let altPath = stdpath('config') . '/lazy/sbzr.nvim.im'
             if isdirectory(altPath . '/misc')
                 let pluginDir = altPath
             endif
@@ -3573,16 +3573,16 @@ endfunction
 " Combined command: cleanup dictionary + clear cache + reload
 " This is the only cache management command now
 function! ZFVimIM_refreshAll()
-    echom '[sbzr.vimi.m] 开始刷新：清理字典 + 清除缓存 + 重新加载...'
+    echom '[sbzr.nvim.im] 开始刷新：清理字典 + 清除缓存 + 重新加载...'
     
     " Step 1: Cleanup dictionary file (if cleanup script exists)
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict') && isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
     else
         if !isdirectory(pluginDir . '/misc')
-            let altPath = stdpath('config') . '/lazy/ZFVimIM'
+            let altPath = stdpath('config') . '/lazy/sbzr.nvim.im'
             if isdirectory(altPath . '/misc')
                 let pluginDir = altPath
             endif
@@ -3619,31 +3619,31 @@ function! ZFVimIM_refreshAll()
                     let dictPathAbs = CygpathFix_absPath(dictPath)
                     let cachePathAbs = CygpathFix_absPath(cachePath)
                     
-                    echom '[sbzr.vimi.m] 步骤 1/3: 清理字典文件...'
+                    echom '[sbzr.nvim.im] 步骤 1/3: 清理字典文件...'
                     let cmdList = [pythonCmd, scriptPathAbs, dictPathAbs, cachePathAbs]
                     let result = system(join(cmdList, ' '))
                     if v:shell_error == 0
-                        echom '[sbzr.vimi.m] 字典文件清理完成'
+                        echom '[sbzr.nvim.im] 字典文件清理完成'
                     else
-                        echom '[sbzr.vimi.m] 警告: 字典清理失败: ' . result
+                        echom '[sbzr.nvim.im] 警告: 字典清理失败: ' . result
                     endif
                 catch /.*/
-                    echom '[sbzr.vimi.m] 警告: 字典清理出错: ' . v:exception
+                    echom '[sbzr.nvim.im] 警告: 字典清理出错: ' . v:exception
                 endtry
             endif
         endif
     else
-        echom '[sbzr.vimi.m] 跳过字典清理（清理脚本不存在）'
+        echom '[sbzr.nvim.im] 跳过字典清理（清理脚本不存在）'
     endif
     
     " Step 2: Clear cache and reload dictionaries
-    echom '[sbzr.vimi.m] 步骤 2/3: 清除缓存文件...'
+    echom '[sbzr.nvim.im] 步骤 2/3: 清除缓存文件...'
     call ZFVimIM_cacheClearAll()
     
-    echom '[sbzr.vimi.m] 步骤 3/3: 重新加载字典...'
+    echom '[sbzr.nvim.im] 步骤 3/3: 重新加载字典...'
     call ZFVimIM_cacheUpdate()
     
-    echom '[sbzr.vimi.m] 刷新完成！'
+    echom '[sbzr.nvim.im] 刷新完成！'
 endfunction
 
 " ============================================================
@@ -3675,13 +3675,13 @@ command! -nargs=0 IMEdit call ZFVimIM_editDict()
 function! ZFVimIM_importTxtToDb(...)
     " Check if Python is available
     if !executable('python') && !executable('python3')
-        echom '[sbzr.vimi.m] Error: Python not found, cannot import TXT file'
+        echom '[sbzr.nvim.im] Error: Python not found, cannot import TXT file'
         return
     endif
     
     " Get YAML file path (use argument if provided, otherwise use default)
     let yamlPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -3693,7 +3693,7 @@ function! ZFVimIM_importTxtToDb(...)
         let yamlPath = expand(a:1)
         " Check if file exists
         if !filereadable(yamlPath)
-            echom '[sbzr.vimi.m] 错误: 指定的 YAML 文件不存在: ' . yamlPath
+            echom '[sbzr.nvim.im] 错误: 指定的 YAML 文件不存在: ' . yamlPath
             return
         endif
     else
@@ -3704,7 +3704,7 @@ function! ZFVimIM_importTxtToDb(...)
     
     " Skip if TXT file doesn't exist
     if empty(yamlPath) || !filereadable(yamlPath)
-        echom '[sbzr.vimi.m] Error: YAML dictionary file not found: ' . yamlPath
+        echom '[sbzr.nvim.im] Error: YAML dictionary file not found: ' . yamlPath
         return
     endif
     
@@ -3714,7 +3714,7 @@ function! ZFVimIM_importTxtToDb(...)
     " Get script path
     let scriptPath = pluginDir . '/misc/import_txt_to_db.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] Error: Import script not found: ' . scriptPath
+        echom '[sbzr.nvim.im] Error: Import script not found: ' . scriptPath
         return
     endif
     
@@ -3722,10 +3722,10 @@ function! ZFVimIM_importTxtToDb(...)
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     
     " Confirm before clearing database
-    echom '[sbzr.vimi.m] 警告: 此操作将清空数据库并重新导入！'
-    echom '[sbzr.vimi.m] YAML 文件: ' . yamlPath
-    echom '[sbzr.vimi.m] 数据库文件: ' . dbPath
-    echom '[sbzr.vimi.m] 正在执行导入...'
+    echom '[sbzr.nvim.im] 警告: 此操作将清空数据库并重新导入！'
+    echom '[sbzr.nvim.im] YAML 文件: ' . yamlPath
+    echom '[sbzr.nvim.im] 数据库文件: ' . dbPath
+    echom '[sbzr.nvim.im] 正在执行导入...'
     
     " Run import script
     try
@@ -3745,7 +3745,7 @@ function! ZFVimIM_importTxtToDb(...)
         endfor
         
         if v:shell_error == 0
-            echom '[sbzr.vimi.m] 导入完成！'
+            echom '[sbzr.nvim.im] 导入完成！'
             " Optionally reload the database
             if exists('g:ZFVimIM_db') && len(g:ZFVimIM_db) > 0
                 let db = g:ZFVimIM_db[g:ZFVimIM_dbIndex]
@@ -3756,30 +3756,30 @@ function! ZFVimIM_importTxtToDb(...)
                         let dbPath = s:ZFVimIM_getDbPath(dbPath)
                     endif
                     if filereadable(dbPath)
-                        echom '[sbzr.vimi.m] 重新加载数据库...'
+                        echom '[sbzr.nvim.im] 重新加载数据库...'
                         call ZFVimIM_dbLoad(db, dbPath)
-                        echom '[sbzr.vimi.m] 数据库已重新加载'
+                        echom '[sbzr.nvim.im] 数据库已重新加载'
                     endif
                 endif
             endif
         else
-            echom '[sbzr.vimi.m] 导入失败，请检查错误信息'
+            echom '[sbzr.nvim.im] 导入失败，请检查错误信息'
         endif
     catch /.*/
-        echom '[sbzr.vimi.m] Error: 导入过程出错: ' . v:exception
+        echom '[sbzr.nvim.im] Error: 导入过程出错: ' . v:exception
     endtry
 endfunction
 
 function! ZFVimIM_exportDbToTxt()
     " Check if Python is available
     if !executable('python') && !executable('python3')
-        echom '[sbzr.vimi.m] Error: Python not found, cannot backup dictionary'
+        echom '[sbzr.nvim.im] Error: Python not found, cannot backup dictionary'
         return
     endif
     
     " Get database file path
     let dbPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -3796,7 +3796,7 @@ function! ZFVimIM_exportDbToTxt()
     
     " Skip if database file doesn't exist
     if empty(dbPath) || !filereadable(dbPath)
-        echom '[sbzr.vimi.m] Error: Database file not found: ' . dbPath
+        echom '[sbzr.nvim.im] Error: Database file not found: ' . dbPath
         return
     endif
     
@@ -3806,7 +3806,7 @@ function! ZFVimIM_exportDbToTxt()
     " Get script path
     let scriptPath = pluginDir . '/misc/db_export_to_txt.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] Error: 备份脚本未找到: ' . scriptPath
+        echom '[sbzr.nvim.im] Error: 备份脚本未找到: ' . scriptPath
         return
     endif
     
@@ -3819,9 +3819,9 @@ function! ZFVimIM_exportDbToTxt()
         let dbPathAbs = CygpathFix_absPath(dbPath)
         let yamlPathAbs = CygpathFix_absPath(yamlPath)
         
-        echom '[sbzr.vimi.m] 开始备份（从数据库导出到 YAML）...'
-        echom '[sbzr.vimi.m] 数据库: ' . dbPathAbs
-        echom '[sbzr.vimi.m] YAML 文件: ' . yamlPathAbs
+        echom '[sbzr.nvim.im] 开始备份（从数据库导出到 YAML）...'
+        echom '[sbzr.nvim.im] 数据库: ' . dbPathAbs
+        echom '[sbzr.nvim.im] YAML 文件: ' . yamlPathAbs
         
         let cmdList = [pythonCmd, scriptPathAbs, dbPathAbs, yamlPathAbs]
         let result = system(join(cmdList, ' '))
@@ -3835,12 +3835,12 @@ function! ZFVimIM_exportDbToTxt()
         endfor
         
         if v:shell_error == 0
-            echom '[sbzr.vimi.m] ✅ 备份完成！'
+            echom '[sbzr.nvim.im] ✅ 备份完成！'
         else
-            echom '[sbzr.vimi.m] ❌ 备份失败，请检查错误信息'
+            echom '[sbzr.nvim.im] ❌ 备份失败，请检查错误信息'
         endif
     catch /.*/
-        echom '[sbzr.vimi.m] Error: 备份过程出错: ' . v:exception
+        echom '[sbzr.nvim.im] Error: 备份过程出错: ' . v:exception
     endtry
 endfunction
 
@@ -3853,7 +3853,7 @@ function! ZFVimIM_syncTxtToDb()
     
     " Get dictionary file path (TXT file)
     let yamlPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -3870,13 +3870,13 @@ function! ZFVimIM_syncTxtToDb()
     endif
     
     " Get script path
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict') && isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
     else
         if !isdirectory(pluginDir . '/misc')
-            let altPath = stdpath('config') . '/lazy/ZFVimIM'
+            let altPath = stdpath('config') . '/lazy/sbzr.nvim.im'
             if isdirectory(altPath . '/misc')
                 let pluginDir = altPath
             endif
@@ -3958,7 +3958,7 @@ function! ZFVimIM_showInfo()
         echo "❌ 未加载任何词库"
         echo ""
         echo "词库: sbzr.yaml (固定)"
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -4098,7 +4098,7 @@ function! ZFVimIM_showInfo()
     
     " Fallback: try to get from default dict name
     if empty(yamlPath)
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -4115,7 +4115,7 @@ function! ZFVimIM_showInfo()
     endif
     
     " Get script path
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
@@ -4171,7 +4171,7 @@ endfunction
 function! ZFVimIM_batchAddWords(...)
     " Get current dictionary path
     let dictPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -4184,7 +4184,7 @@ function! ZFVimIM_batchAddWords(...)
     
     " Check if dictionary file exists
     if !filereadable(dictPath)
-        echom '[sbzr.vimi.m] 错误: 词库文件不存在: ' . dictPath
+        echom '[sbzr.nvim.im] 错误: 词库文件不存在: ' . dictPath
         return
     endif
     
@@ -4236,7 +4236,7 @@ function! ZFVimIM_batchAddWords(...)
     nnoremap <buffer> <silent> <C-s> :w<CR>
     inoremap <buffer> <silent> <C-s> <Esc>:w<CR>
     
-    echom '[sbzr.vimi.m] 批量添加模式已在新标签页打开，每次 :w 保存时会实时写入数据库并重新加载输入法'
+    echom '[sbzr.nvim.im] 批量添加模式已在新标签页打开，每次 :w 保存时会实时写入数据库并重新加载输入法'
 endfunction
 
 function! s:ZFVimIM_processBatchAdd()
@@ -4249,7 +4249,7 @@ function! s:ZFVimIM_processBatchAdd()
         if bufname =~# '\[ZFVimIM 批量添加\]'
             let dictName = substitute(bufname, '.*\[ZFVimIM 批量添加\]\s*', '', '')
             if !empty(dictName)
-                let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+                let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
                 let sfileDir = expand('<sfile>:p:h:h')
                 if isdirectory(sfileDir . '/dict')
                     let pluginDir = sfileDir
@@ -4261,7 +4261,7 @@ function! s:ZFVimIM_processBatchAdd()
         
         " If still empty, use default dictionary
         if empty(dictPath)
-            let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+            let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
             let sfileDir = expand('<sfile>:p:h:h')
             if isdirectory(sfileDir . '/dict')
                 let pluginDir = sfileDir
@@ -4274,7 +4274,7 @@ function! s:ZFVimIM_processBatchAdd()
     endif
     
     if empty(dictPath)
-        echom '[sbzr.vimi.m] 错误: 无法获取词库路径'
+        echom '[sbzr.nvim.im] 错误: 无法获取词库路径'
         setlocal nomodified
         return
     endif
@@ -4320,7 +4320,7 @@ function! s:ZFVimIM_processBatchAdd()
     endfor
     
     if empty(entries)
-        echom '[sbzr.vimi.m] 没有有效的条目，取消保存'
+        echom '[sbzr.nvim.im] 没有有效的条目，取消保存'
         setlocal nomodified
         return
     endif
@@ -4332,7 +4332,7 @@ function! s:ZFVimIM_processBatchAdd()
     endif
     
     if !filereadable(yamlPath)
-        echom '[sbzr.vimi.m] 错误: YAML 文件不存在: ' . yamlPath
+        echom '[sbzr.nvim.im] 错误: YAML 文件不存在: ' . yamlPath
         setlocal nomodified
         return
     endif
@@ -4381,7 +4381,7 @@ function! s:ZFVimIM_processBatchAdd()
     call writefile(output, yamlPath)
     
     if !empty(newEntries)
-        echom '[sbzr.vimi.m] 已保存 ' . len(newEntries) . ' 个新条目到 YAML: ' . fnamemodify(yamlPath, ':t')
+        echom '[sbzr.nvim.im] 已保存 ' . len(newEntries) . ' 个新条目到 YAML: ' . fnamemodify(yamlPath, ':t')
         
         " Get database file path
         let dbPath = s:ZFVimIM_getDbPath(yamlPath)
@@ -4389,26 +4389,26 @@ function! s:ZFVimIM_processBatchAdd()
         " Get Python command
         let pythonCmd = executable('python3') ? 'python3' : 'python'
         if !executable(pythonCmd)
-            echom '[sbzr.vimi.m] 错误: Python 未找到，无法同步到数据库'
+            echom '[sbzr.nvim.im] 错误: Python 未找到，无法同步到数据库'
             setlocal nomodified
             return
         endif
         
         " Get script path
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/misc')
             let pluginDir = sfileDir
         endif
         let scriptPath = pluginDir . '/misc/db_add_word.py'
         if !filereadable(scriptPath)
-            echom '[sbzr.vimi.m] 错误: 脚本文件不存在: ' . scriptPath
+            echom '[sbzr.nvim.im] 错误: 脚本文件不存在: ' . scriptPath
             setlocal nomodified
             return
         endif
         
         " Insert new entries to database
-        echom '[sbzr.vimi.m] 正在同步 ' . len(newEntries) . ' 个新条目到数据库...'
+        echom '[sbzr.nvim.im] 正在同步 ' . len(newEntries) . ' 个新条目到数据库...'
         let addedCount = 0
         let failedCount = 0
         
@@ -4423,9 +4423,9 @@ function! s:ZFVimIM_processBatchAdd()
             endif
         endfor
         
-        echom '[sbzr.vimi.m] ✅ 已同步 ' . addedCount . ' 个条目到数据库'
+        echom '[sbzr.nvim.im] ✅ 已同步 ' . addedCount . ' 个条目到数据库'
         if failedCount > 0
-            echom '[sbzr.vimi.m] ⚠️  ' . failedCount . ' 个条目同步失败'
+            echom '[sbzr.nvim.im] ⚠️  ' . failedCount . ' 个条目同步失败'
         endif
         
         " Reload dictionary after saving
@@ -4435,13 +4435,13 @@ function! s:ZFVimIM_processBatchAdd()
                 if get(db, 'name', '') ==# dictName
                     call ZFVimIM_dbSearchCacheClear(db)
                     call ZFVimIM_dbLoad(db, dbPath)
-                    echom '[sbzr.vimi.m] ✅ 输入法已重新加载'
+                    echom '[sbzr.nvim.im] ✅ 输入法已重新加载'
                     break
                 endif
             endfor
         endif
     else
-        echom '[sbzr.vimi.m] 所有条目已存在于 YAML 文件中'
+        echom '[sbzr.nvim.im] 所有条目已存在于 YAML 文件中'
     endif
     
     " Keep buffer open, just mark as not modified
@@ -4452,7 +4452,7 @@ endfunction
 function! ZFVimIM_editDict()
     " Get current dictionary path
     let dictPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -4466,8 +4466,8 @@ function! ZFVimIM_editDict()
     " Get database file path
     let dbPath = s:ZFVimIM_getDbPath(dictPath)
     if !filereadable(dbPath)
-        echom '[sbzr.vimi.m] 错误: 数据库文件不存在: ' . dbPath
-        echom '[sbzr.vimi.m] 请先运行 :IMInit 初始化词库'
+        echom '[sbzr.nvim.im] 错误: 数据库文件不存在: ' . dbPath
+        echom '[sbzr.nvim.im] 请先运行 :IMInit 初始化词库'
         return
     endif
     
@@ -4502,14 +4502,14 @@ function! ZFVimIM_editDict()
     " Export database to text format
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     if !executable(pythonCmd)
-        echom '[sbzr.vimi.m] 错误: Python 未找到，无法导出词库'
+        echom '[sbzr.nvim.im] 错误: Python 未找到，无法导出词库'
         return
     endif
     
     " Get script path
     let scriptPath = pluginDir . '/misc/db_export_for_edit.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] 错误: 脚本文件不存在: ' . scriptPath
+        echom '[sbzr.nvim.im] 错误: 脚本文件不存在: ' . scriptPath
         return
     endif
     
@@ -4520,9 +4520,9 @@ function! ZFVimIM_editDict()
     let result = system(cmd)
     
     if v:shell_error != 0
-        echom '[sbzr.vimi.m] 错误: 导出词库失败'
+        echom '[sbzr.nvim.im] 错误: 导出词库失败'
         if !empty(result)
-            echom '[sbzr.vimi.m] 错误信息: ' . result
+            echom '[sbzr.nvim.im] 错误信息: ' . result
         endif
         return
     endif
@@ -4550,7 +4550,7 @@ function! ZFVimIM_editDict()
     " Move cursor to first data line
     normal! 11G
     
-    echom '[sbzr.vimi.m] 词库编辑模式已在新标签页打开，每次 :w 保存时会即时导入到词库并重新加载输入法'
+    echom '[sbzr.nvim.im] 词库编辑模式已在新标签页打开，每次 :w 保存时会即时导入到词库并重新加载输入法'
 endfunction
 
 function! s:ZFVimIM_processEditDict()
@@ -4563,7 +4563,7 @@ function! s:ZFVimIM_processEditDict()
         if bufname =~# '\[ZFVimIM 词库编辑\]'
             let dictName = substitute(bufname, '.*\[ZFVimIM 词库编辑\]\s*', '', '')
             if !empty(dictName)
-                let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+                let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
                 let sfileDir = expand('<sfile>:p:h:h')
                 if isdirectory(sfileDir . '/dict')
                     let pluginDir = sfileDir
@@ -4576,7 +4576,7 @@ function! s:ZFVimIM_processEditDict()
         
         " If still empty, use default dictionary
         if empty(dictPath)
-            let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+            let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
             let sfileDir = expand('<sfile>:p:h:h')
             if isdirectory(sfileDir . '/dict')
                 let pluginDir = sfileDir
@@ -4590,7 +4590,7 @@ function! s:ZFVimIM_processEditDict()
     endif
     
     if empty(dictPath) || empty(dbPath)
-        echom '[sbzr.vimi.m] 错误: 无法获取词库路径'
+        echom '[sbzr.nvim.im] 错误: 无法获取词库路径'
         setlocal nomodified
         return
     endif
@@ -4645,7 +4645,7 @@ function! s:ZFVimIM_processEditDict()
     endfor
     
     if empty(entries)
-        echom '[sbzr.vimi.m] 没有有效的条目，取消保存'
+        echom '[sbzr.nvim.im] 没有有效的条目，取消保存'
         setlocal nomodified
         return
     endif
@@ -4666,24 +4666,24 @@ function! s:ZFVimIM_processEditDict()
     
     call writefile(output, tmpYamlPath)
     
-    echom '[sbzr.vimi.m] 已保存 ' . len(entries) . ' 个条目到临时文件'
+    echom '[sbzr.nvim.im] 已保存 ' . len(entries) . ' 个条目到临时文件'
     
     " Import to database using import script
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     if !executable(pythonCmd)
-        echom '[sbzr.vimi.m] 错误: Python 未找到，无法导入到数据库'
+        echom '[sbzr.nvim.im] 错误: Python 未找到，无法导入到数据库'
         setlocal nomodified
         return
     endif
     
     " Get script path
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/misc')
         let pluginDir = sfileDir
     else
         if !isdirectory(pluginDir . '/misc')
-            let altPath = stdpath('config') . '/lazy/ZFVimIM'
+            let altPath = stdpath('config') . '/lazy/sbzr.nvim.im'
             if isdirectory(altPath . '/misc')
                 let pluginDir = altPath
             endif
@@ -4691,7 +4691,7 @@ function! s:ZFVimIM_processEditDict()
     endif
     let scriptPath = pluginDir . '/misc/import_txt_to_db.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] 错误: 脚本文件不存在: ' . scriptPath
+        echom '[sbzr.nvim.im] 错误: 脚本文件不存在: ' . scriptPath
         setlocal nomodified
         return
     endif
@@ -4709,7 +4709,7 @@ function! s:ZFVimIM_processEditDict()
     endif
     
     if v:shell_error == 0
-        echom '[sbzr.vimi.m] ✅ 已导入 ' . len(entries) . ' 个条目到数据库'
+        echom '[sbzr.nvim.im] ✅ 已导入 ' . len(entries) . ' 个条目到数据库'
         
         " Reload dictionary
         let dictName = fnamemodify(dbPath, ':t:r')
@@ -4718,15 +4718,15 @@ function! s:ZFVimIM_processEditDict()
                 if get(db, 'name', '') ==# dictName
                     call ZFVimIM_dbSearchCacheClear(db)
                     call ZFVimIM_dbLoad(db, dbPath)
-                    echom '[sbzr.vimi.m] ✅ 输入法已重新加载'
+                    echom '[sbzr.nvim.im] ✅ 输入法已重新加载'
                     break
                 endif
             endfor
         endif
     else
-        echom '[sbzr.vimi.m] ❌ 导入失败'
+        echom '[sbzr.nvim.im] ❌ 导入失败'
         if !empty(result)
-            echom '[sbzr.vimi.m] 错误信息: ' . result
+            echom '[sbzr.nvim.im] 错误信息: ' . result
         endif
         setlocal nomodified
         return
@@ -4740,7 +4740,7 @@ endfunction
 function! ZFVimIM_backupDict(...)
     " Check if Python is available
     if !executable('python') && !executable('python3')
-        echom '[sbzr.vimi.m] 错误: Python 未找到，无法备份词库'
+        echom '[sbzr.nvim.im] 错误: Python 未找到，无法备份词库'
         return
     endif
     
@@ -4754,13 +4754,13 @@ function! ZFVimIM_backupDict(...)
             " Try to create it
             call mkdir(backupDir, 'p')
             if !isdirectory(backupDir)
-                echom '[sbzr.vimi.m] 错误: 无法创建备份目录: ' . backupDir
+                echom '[sbzr.nvim.im] 错误: 无法创建备份目录: ' . backupDir
                 return
             endif
         endif
     else
         " Use default dict directory
-        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
         let sfileDir = expand('<sfile>:p:h:h')
         if isdirectory(sfileDir . '/dict')
             let pluginDir = sfileDir
@@ -4770,7 +4770,7 @@ function! ZFVimIM_backupDict(...)
     
     " Get database file path
     let dbPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    let pluginDir = stdpath('data') . '/lazy/sbzr.nvim.im'
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
@@ -4787,8 +4787,8 @@ function! ZFVimIM_backupDict(...)
     
     " Check if database file exists
     if empty(dbPath) || !filereadable(dbPath)
-        echom '[sbzr.vimi.m] 错误: 数据库文件不存在: ' . dbPath
-        echom '[sbzr.vimi.m] 请先运行 :IMInit 初始化词库'
+        echom '[sbzr.nvim.im] 错误: 数据库文件不存在: ' . dbPath
+        echom '[sbzr.nvim.im] 请先运行 :IMInit 初始化词库'
         return
     endif
     
@@ -4808,7 +4808,7 @@ function! ZFVimIM_backupDict(...)
     " Get script path for export
     let scriptPath = pluginDir . '/misc/db_export_to_txt.py'
     if !filereadable(scriptPath)
-        echom '[sbzr.vimi.m] 错误: 导出脚本未找到: ' . scriptPath
+        echom '[sbzr.nvim.im] 错误: 导出脚本未找到: ' . scriptPath
         return
     endif
     
@@ -4817,9 +4817,9 @@ function! ZFVimIM_backupDict(...)
     
     " Step 1: Copy DB file to backup location
     try
-        echom '[sbzr.vimi.m] 开始备份词库...'
-        echom '[sbzr.vimi.m] 数据库: ' . dbPath
-        echom '[sbzr.vimi.m] 备份目录: ' . backupDir
+        echom '[sbzr.nvim.im] 开始备份词库...'
+        echom '[sbzr.nvim.im] 数据库: ' . dbPath
+        echom '[sbzr.nvim.im] 备份目录: ' . backupDir
         
         " Copy DB file
         let dbPathAbs = CygpathFix_absPath(dbPath)
@@ -4834,20 +4834,20 @@ function! ZFVimIM_backupDict(...)
         
         let copyResult = system(copyCmd)
         if v:shell_error != 0
-            echom '[sbzr.vimi.m] ❌ 复制数据库文件失败'
+            echom '[sbzr.nvim.im] ❌ 复制数据库文件失败'
             if !empty(copyResult)
-                echom '[sbzr.vimi.m] 错误信息: ' . copyResult
+                echom '[sbzr.nvim.im] 错误信息: ' . copyResult
             endif
             return
         endif
         
-        echom '[sbzr.vimi.m] ✅ 数据库文件已备份: ' . backupDbName
+        echom '[sbzr.nvim.im] ✅ 数据库文件已备份: ' . backupDbName
         
         " Step 2: Export DB to YAML
         let scriptPathAbs = CygpathFix_absPath(scriptPath)
         let backupYamlPathAbs = CygpathFix_absPath(backupYamlPath)
         
-        echom '[sbzr.vimi.m] 正在导出 YAML 文件...'
+        echom '[sbzr.nvim.im] 正在导出 YAML 文件...'
         
         let cmdList = [pythonCmd, scriptPathAbs, backupDbPathAbs, backupYamlPathAbs]
         let result = system(join(cmdList, ' '))
@@ -4861,20 +4861,20 @@ function! ZFVimIM_backupDict(...)
         endfor
         
         if v:shell_error == 0
-            echom '[sbzr.vimi.m] ✅ YAML 文件已备份: ' . backupYamlName
-            echom '[sbzr.vimi.m] ✅ 备份完成！'
-            echom '[sbzr.vimi.m] 备份位置: ' . backupDir
-            echom '[sbzr.vimi.m]   - DB: ' . backupDbName
-            echom '[sbzr.vimi.m]   - YAML: ' . backupYamlName
+            echom '[sbzr.nvim.im] ✅ YAML 文件已备份: ' . backupYamlName
+            echom '[sbzr.nvim.im] ✅ 备份完成！'
+            echom '[sbzr.nvim.im] 备份位置: ' . backupDir
+            echom '[sbzr.nvim.im]   - DB: ' . backupDbName
+            echom '[sbzr.nvim.im]   - YAML: ' . backupYamlName
         else
-            echom '[sbzr.vimi.m] ❌ YAML 文件导出失败'
+            echom '[sbzr.nvim.im] ❌ YAML 文件导出失败'
             " Remove DB backup if YAML export failed
             if filereadable(backupDbPath)
                 call delete(backupDbPath)
             endif
         endif
     catch /.*/
-        echom '[sbzr.vimi.m] Error: 备份过程出错: ' . v:exception
+        echom '[sbzr.nvim.im] Error: 备份过程出错: ' . v:exception
         " Clean up on error
         if filereadable(backupDbPath)
             call delete(backupDbPath)
