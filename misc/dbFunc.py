@@ -1,0 +1,449 @@
+import io
+import os
+import re
+import shutil
+import sys
+import sqlite3
+
+
+ZFVimIM_KEY_S_MAIN = '#'
+ZFVimIM_KEY_S_SUB = ','
+ZFVimIM_KEY_SR_MAIN = '_ZFVimIM_m_'
+ZFVimIM_KEY_SR_SUB = '_ZFVimIM_s_'
+
+
+DB_FILE_LINE_BUFFER = 2000
+
+
+if sys.version_info >= (3, 0):
+    def dbMapIter(dbMapDict):
+        return dbMapDict.items()
+else:
+    def dbMapIter(dbMapDict):
+        return dbMapDict.iteritems()
+
+
+def dbWordIndex(wordList, word):
+    try:
+        return wordList.index(word)
+    except:
+        return -1
+
+
+ZFVimIM_dbItemReorderThreshold = 1
+def dbItemReorderFunc(item1, item2):
+    if (item2['count'] - item1['count']) - ZFVimIM_dbItemReorderThreshold > 0:
+        return 1
+    elif (item1['count'] - item2['count']) - ZFVimIM_dbItemReorderThreshold > 0:
+        return -1
+    else:
+        return 0
+def dbItemReorder(dbItem):
+    tmp = []
+    i = 0
+    iEnd = len(dbItem['wordList'])
+    while i < iEnd:
+        tmp.append({
+            'word' : dbItem['wordList'][i],
+            'count' : dbItem['countList'][i],
+        })
+        i += 1
+    if sys.version_info >= (3, 0):
+        import functools
+        tmp.sort(key = functools.cmp_to_key(dbItemReorderFunc))
+    else:
+        tmp.sort(cmp = dbItemReorderFunc)
+    dbItem['wordList'] = []
+    dbItem['countList'] = []
+    for item in tmp:
+        dbItem['wordList'].append(item['word'])
+        dbItem['countList'].append(item['count'])
+
+
+def dbItemDecode(dbItemEncoded):
+    split = dbItemEncoded.split(ZFVimIM_KEY_S_MAIN)
+    wordList = split[1].split(ZFVimIM_KEY_S_SUB)
+    for i in range(len(wordList)):
+        wordList[i] = re.sub(ZFVimIM_KEY_SR_SUB, ZFVimIM_KEY_S_SUB,
+                re.sub(ZFVimIM_KEY_SR_MAIN, ZFVimIM_KEY_S_MAIN, wordList[i])
+            )
+    countList = []
+    if len(split) >= 3:
+        for cnt in split[2].split(ZFVimIM_KEY_S_SUB):
+            countList.append(int(cnt))
+    while len(countList) < len(wordList):
+        countList.append(0)
+    return {
+        'key' : split[0],
+        'wordList' : wordList,
+        'countList' : countList,
+    }
+
+
+def dbItemEncode(dbItem):
+    dbItemEncoded = dbItem['key']
+    dbItemEncoded += ZFVimIM_KEY_S_MAIN
+    for i in range(len(dbItem['wordList'])):
+        if i != 0:
+            dbItemEncoded += ZFVimIM_KEY_S_SUB
+        dbItemEncoded += re.sub(ZFVimIM_KEY_S_SUB, ZFVimIM_KEY_SR_SUB,
+                re.sub(ZFVimIM_KEY_S_MAIN, ZFVimIM_KEY_SR_MAIN, dbItem['wordList'][i])
+            )
+    iEnd = len(dbItem['countList']) - 1
+    while iEnd >= 0:
+        if dbItem['countList'][iEnd] > 0:
+            break
+        iEnd -= 1
+    i = 0
+    while i <= iEnd:
+        if i == 0:
+            dbItemEncoded += ZFVimIM_KEY_S_MAIN
+        else:
+            dbItemEncoded += ZFVimIM_KEY_S_SUB
+        dbItemEncoded += str(dbItem['countList'][i])
+        i += 1
+    return dbItemEncoded
+
+
+# Load from SQLite database
+def dbLoadSqlitePy(dbFile, dbCountFile):
+    pyMap = {}
+    if not os.path.isfile(dbFile):
+        return pyMap
+    
+    try:
+        # Optimize SQLite connection for read performance
+        conn = sqlite3.connect(dbFile)
+        # Optimize for read-only access (faster reads)
+        conn.execute('PRAGMA synchronous=NORMAL')
+        conn.execute('PRAGMA cache_size=-64000')  # 64MB cache
+        cursor = conn.cursor()
+        
+        # Load all words from database in one query
+        # Try to load frequency if column exists, otherwise default to 0
+        try:
+            cursor.execute('SELECT key, word, frequency FROM words ORDER BY key, word')
+            has_frequency = True
+        except sqlite3.OperationalError:
+            # Column doesn't exist, try without frequency (for backward compatibility)
+            cursor.execute('SELECT key, word FROM words ORDER BY key, word')
+            has_frequency = False
+        
+        rows = cursor.fetchall()
+        conn.close()
+        
+        # First pass: collect all words and frequencies for each key (avoid repeated encode/decode)
+        # Use dict with list - duplicates are already handled by PRIMARY KEY in DB
+        keyWordsMap = {}  # key -> list of (word, frequency) tuples
+        
+        for row in rows:
+            if has_frequency:
+                key, word, frequency = row
+            else:
+                key, word = row
+                frequency = 0
+            
+            # Filter: only lowercase alphabetic keys
+            if not key or not key[0].islower() or not key.isalpha():
+                    continue
+                
+            if key not in keyWordsMap:
+                keyWordsMap[key] = []
+            # No need to check duplicates - PRIMARY KEY ensures uniqueness
+            keyWordsMap[key].append((word, frequency))
+        
+        # Second pass: encode all items at once (much faster than per-row encoding)
+        for key, wordFreqList in keyWordsMap.items():
+            if key[0] not in pyMap:
+                pyMap[key[0]] = {}
+            # Sort by frequency (descending) to maintain order
+            # This ensures words with higher frequency appear first
+            wordFreqList.sort(key=lambda x: x[1], reverse=True)
+            wordList = [wf[0] for wf in wordFreqList]
+            countList = [wf[1] for wf in wordFreqList]
+            # Encode and then reorder (dbItemReorder will handle final sorting)
+            dbItem = {
+                'key' : key,
+                'wordList' : wordList,
+                'countList' : countList,
+            }
+            dbItemReorder(dbItem)  # Sort by frequency with threshold
+            pyMap[key[0]][key] = dbItemEncode(dbItem)
+        
+    except Exception as e:
+        # If SQLite loading fails, return empty map
+        # Print error for debugging
+        import sys
+        print(f'Error loading SQLite database {dbFile}: {e}', file=sys.stderr)
+        pass
+    
+    # Load word count from count file (still as text format for compatibility)
+    if len(dbCountFile) > 0 and os.path.isfile(dbCountFile) and os.access(dbCountFile, os.R_OK):
+        with io.open(dbCountFile, 'r', encoding='utf-8') as dbCountFilePtr:
+            for line in dbCountFilePtr:
+                line = line.rstrip('\n')
+                countTextList = line.split(' ')
+                if len(countTextList) <= 1:
+                    continue
+                key = countTextList[0]
+                dbItemEncoded = pyMap.get(key[0], {}).get(key, '')
+                if dbItemEncoded == '':
+                    continue
+                dbItem = dbItemDecode(dbItemEncoded)
+                wordListLen = len(dbItem['wordList'])
+                for i in range(len(countTextList) - 1):
+                    if i >= wordListLen:
+                        break
+                    dbItem['countList'][i] = int(countTextList[i + 1])
+                dbItemReorder(dbItem)
+                pyMap[key[0]][key] = dbItemEncode(dbItem)
+    
+    return pyMap
+    # end of dbLoadSqlitePy
+
+
+# since python has low performance on List search,
+# we use different db struct with vim side
+#
+# return pyMap: {
+#   'a' : {
+#     'a' : 'a#AAA,BBB#3,2',
+#     'ai' : 'ai#CCC,DDD#3',
+#   },
+#   'c' : {
+#     'ceshi' : 'ceshi#EEE',
+#   },
+# }
+# Now only supports SQLite database files (.db)
+def dbLoadPy(dbFile, dbCountFile):
+    # Convert .yaml to .db if needed
+    if dbFile.endswith('.yaml'):
+        dbFile = dbFile[:-4] + '.db'
+    
+    # Only load from SQLite database
+    return dbLoadSqlitePy(dbFile, dbCountFile)
+    # end of dbLoadPy
+
+
+# similar to dbFunc.dbLoad()
+# but transform db file to formal format:
+# * ensure key only contains a-z
+# * sort lines
+# * transform:
+#     key a1 a2
+#     key a1 a3
+#   to:
+#     key a1 a2 a3
+# Now only supports SQLite database files (.db)
+def dbLoadNormalizePy(dbFile):
+    # Convert .yaml to .db if needed
+    if dbFile.endswith('.yaml'):
+        dbFile = dbFile[:-4] + '.db'
+    
+    # Load from SQLite and normalize
+    pyMap = dbLoadSqlitePy(dbFile, '')
+    
+    # Normalize keys (remove non-alphabetic characters)
+    normalizedMap = {}
+    for c in pyMap.keys():
+        for key, dbItemEncoded in pyMap[c].items():
+            dbItem = dbItemDecode(dbItemEncoded)
+            # Normalize key (remove non-alphabetic characters)
+            normalizedKey = re.sub('[^a-z]', '', key)
+            if normalizedKey == '':
+                        continue
+            
+            # Use normalized key
+            if normalizedKey[0] not in normalizedMap:
+                normalizedMap[normalizedKey[0]] = {}
+            
+            if normalizedKey in normalizedMap[normalizedKey[0]]:
+                existingItem = dbItemDecode(normalizedMap[normalizedKey[0]][normalizedKey])
+                for word in dbItem['wordList']:
+                    if word not in existingItem['wordList']:
+                        existingItem['wordList'].append(word)
+                        existingItem['countList'].append(0)
+                normalizedMap[normalizedKey[0]][normalizedKey] = dbItemEncode(existingItem)
+            else:
+                normalizedMap[normalizedKey[0]][normalizedKey] = dbItemEncode({
+                    'key' : normalizedKey,
+                    'wordList' : dbItem['wordList'],
+                    'countList' : dbItem['countList'],
+                })
+    
+    return normalizedMap
+    # end of dbLoadNormalizePy
+
+
+def dbSavePy(pyMap, dbFile, dbCountFile, cachePath):
+    # Save as TXT format (key word1 word2 ...)
+    # Write to temporary file first
+    tmpFile = cachePath + '/dbFileTmp'
+    dbFilePtr = io.open(tmpFile, 'wb')
+    txtLines = []
+    # Sort keys for consistent output
+    sortedKeys = []
+    for c in pyMap.keys():
+        for key, dbItemEncoded in sorted(dbMapIter(pyMap[c])):
+            dbItem = dbItemDecode(dbItemEncoded)
+            sortedKeys.append(dbItem['key'])
+    sortedKeys.sort()
+    
+    for key in sortedKeys:
+        # Find the item
+        found = False
+        for c in pyMap.keys():
+            for k, dbItemEncoded in sorted(dbMapIter(pyMap[c])):
+                dbItem = dbItemDecode(dbItemEncoded)
+                if dbItem['key'] == key:
+                    found = True
+                    # Format: key word1 word2 ...
+                    # Escape spaces in words
+                    wordParts = []
+                    for word in dbItem['wordList']:
+                        # Escape spaces in words
+                        escapedWord = word.replace(' ', '\\ ')
+                        wordParts.append(escapedWord)
+                    line = key + ' ' + ' '.join(wordParts)
+                    txtLines.append(line)
+                    break
+            if found:
+                break
+        if len(txtLines) >= DB_FILE_LINE_BUFFER:
+            dbFilePtr.write(('\n'.join(txtLines) + '\n').encode('utf-8'))
+            txtLines = []
+    if len(txtLines) > 0:
+        dbFilePtr.write(('\n'.join(txtLines) + '\n').encode('utf-8'))
+    dbFilePtr.close()
+    shutil.move(tmpFile, dbFile)
+    
+    # Save count file if needed (still as text format for compatibility)
+    if len(dbCountFile) > 0:
+            dbCountFilePtr = io.open(cachePath + '/dbCountFileTmp', 'wb')
+            countLines = []
+            for c in pyMap.keys():
+                for key, dbItemEncoded in sorted(dbMapIter(pyMap[c])):
+                    dbItem = dbItemDecode(dbItemEncoded)
+                    countLine = dbItem['key']
+                    for cnt in dbItem['countList']:
+                        if cnt <= 0:
+                            break
+                        countLine += ' '
+                        countLine += str(cnt)
+                    if countLine != key:
+                        countLines.append(countLine)
+                    if len(countLines) >= DB_FILE_LINE_BUFFER:
+                        dbCountFilePtr.write(('\n'.join(countLines) + '\n').encode('utf-8'))
+                        countLines = []
+            if len(countLines) > 0:
+                dbCountFilePtr.write(('\n'.join(countLines) + '\n').encode('utf-8'))
+            dbCountFilePtr.close()
+            shutil.move(cachePath + '/dbCountFileTmp', dbCountFile)
+    # end of dbSavePy
+
+
+def dbEditApplyPy(pyMap, dbEdit):
+    for e in dbEdit:
+        key = e['key']
+        word = e['word']
+        if e['action'] == 'add':
+            if key[0] not in pyMap:
+                pyMap[key[0]] = []
+            dbItemEncoded = pyMap[key[0]].get(key, '')
+            if dbItemEncoded != '':
+                dbItem = dbItemDecode(dbItemEncoded)
+                wordIndex = dbWordIndex(dbItem['wordList'], word)
+                if wordIndex >= 0:
+                    dbItem['countList'][wordIndex] += 1
+                else:
+                    dbItem['wordList'].append(word)
+                    dbItem['countList'].append(1)
+                dbItemReorder(dbItem)
+                pyMap[key[0]][key] = dbItemEncode(dbItem)
+            else:
+                pyMap[key[0]][key] = dbItemEncode({
+                    'key' : key,
+                    'wordList' : [word],
+                    'countList' : [1],
+                })
+        elif e['action'] == 'remove':
+            dbItemEncoded = pyMap.get(key[0], {}).get(key, '')
+            if dbItemEncoded == '':
+                continue
+            dbItem = dbItemDecode(dbItemEncoded)
+            wordIndex = dbWordIndex(dbItem['wordList'], word)
+            if wordIndex < 0:
+                continue
+            del dbItem['wordList'][wordIndex]
+            del dbItem['countList'][wordIndex]
+            if len(dbItem['wordList']) == 0:
+                del pyMap[key[0]][key]
+                if len(pyMap[key[0]]) == 0:
+                    del pyMap[key[0]]
+            else:
+                pyMap[key[0]][key] = dbItemEncode(dbItem)
+        elif e['action'] == 'reorder':
+            dbItemEncoded = pyMap.get(key[0], {}).get(key, '')
+            if dbItemEncoded == '':
+                continue
+            dbItem = dbItemDecode(dbItemEncoded)
+            wordIndex = dbWordIndex(dbItem['wordList'], word)
+            if wordIndex < 0:
+                continue
+            dbItem['countList'][wordIndex] = 0
+            sum = 0
+            for cnt in dbItem['countList']:
+                sum += cnt
+            dbItem['countList'][wordIndex] = int(sum / 2)
+            dbItemReorder(dbItem)
+            pyMap[key[0]][key] = dbItemEncode(dbItem)
+    # end of dbEditApplyPy
+
+
+def dbSyncFrequencyToSqlite(pyMap, dbFile):
+    """
+    将内存中的频率信息同步到 SQLite 数据库
+    
+    Args:
+        pyMap: 内存中的词库映射
+        dbFile: SQLite 数据库文件路径
+    """
+    if not os.path.isfile(dbFile):
+        return False
+    
+    try:
+        conn = sqlite3.connect(dbFile)
+        cursor = conn.cursor()
+        
+        # 检查是否有 frequency 字段
+        cursor.execute("PRAGMA table_info(words)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'frequency' not in columns:
+            # 表结构需要迁移，先不更新
+            conn.close()
+            return False
+        
+        updated_count = 0
+        for c in pyMap.keys():
+            for key, dbItemEncoded in dbMapIter(pyMap[c]):
+                dbItem = dbItemDecode(dbItemEncoded)
+                # 更新每个词的频率
+                for i, word in enumerate(dbItem['wordList']):
+                    frequency = dbItem['countList'][i] if i < len(dbItem['countList']) else 0
+                    cursor.execute(
+                        'UPDATE words SET frequency = ? WHERE key = ? AND word = ?',
+                        (frequency, key, word)
+                    )
+                    if cursor.rowcount > 0:
+                        updated_count += 1
+        
+        conn.commit()
+        conn.close()
+        
+        return True
+    except Exception as e:
+        import sys
+        print(f'Error syncing frequency to database {dbFile}: {e}', file=sys.stderr)
+        return False
+    # end of dbSyncFrequencyToSqlite
+
