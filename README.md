@@ -15,6 +15,10 @@
 
 ### 1. 安装插件
 
+> 💡 **最简单方式**：复制配置文件 [`assast/config/sbzr.vimi.m.lua`](assast/config/sbzr.vimi.m.lua) 到 `~/.config/nvim/lua/plugins/sbzr.vimi.m.lua`
+
+或者手动创建配置文件：
+
 ```lua
 -- ~/.config/nvim/lua/plugins/sbzr.vimi.m.lua
 return {
