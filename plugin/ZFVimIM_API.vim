@@ -320,10 +320,14 @@ endfunction
 function! IMAdd(bang, db, key, word)
     " Get dictionary file path (TXT file)
     let dictPath = ''
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    " Try <sfile> first (actual source directory)
+    let pluginDir = ''
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
+    else
+        " Fallback to stdpath (LazyVim installed location)
+        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
     endif
     let dictDir = pluginDir . '/dict'
     

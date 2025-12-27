@@ -79,11 +79,14 @@ function! s:ZFVimIM_getYamlPath(dbPath)
         let yamlName = yamlName . '.yaml'
     endif
     
-    " Try plugin dict directory
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+    " Try plugin dict directory - try <sfile> first (actual source directory)
+    let pluginDir = ''
     let sfileDir = expand('<sfile>:p:h:h')
     if isdirectory(sfileDir . '/dict')
         let pluginDir = sfileDir
+    else
+        " Fallback to stdpath (LazyVim installed location)
+        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
     endif
     let dictDir = pluginDir . '/dict'
     let yamlPath = dictDir . '/' . yamlName
@@ -107,12 +110,15 @@ endfunction
 function! s:ZFVimIM_autoLoadDict()
     let dictPath = ''
     
-    " Get plugin directory - use stdpath for reliability in LazyVim
-    let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
-    " Try <sfile> method first, fallback to stdpath
+    " Get plugin directory - try <sfile> first (actual source directory)
+    let pluginDir = ''
     let sfileDir = expand('<sfile>:p:h:h')
-    if isdirectory(sfileDir . '/dict')
+    if isdirectory(sfileDir . '/dict') && filereadable(sfileDir . '/dict/sbzr.yaml')
+        " Found dict directory with sbzr.yaml in source directory
         let pluginDir = sfileDir
+    else
+        " Fallback to stdpath (LazyVim installed location)
+        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
     endif
     let dictDir = pluginDir . '/dict'
     
