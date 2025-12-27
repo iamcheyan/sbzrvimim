@@ -342,7 +342,7 @@ function! IMAdd(bang, db, key, word)
     endif
     
     if empty(dictPath) || !filereadable(dictPath)
-        echom '[ZFVimIM] Error: Dictionary file not found: ' . dictPath
+        echom '[sbzr.vimi.m] Error: Dictionary file not found: ' . dictPath
         return
     endif
     
@@ -364,15 +364,15 @@ function! IMAdd(bang, db, key, word)
         let dbPath = dbDir . '/' . dbName
     endif
     if !filereadable(dbPath)
-        echom '[ZFVimIM] Error: Database file not found: ' . dbPath
-        echom '[ZFVimIM] Please run :ZFVimIMSync to create database first'
+        echom '[sbzr.vimi.m] Error: Database file not found: ' . dbPath
+        echom '[sbzr.vimi.m] Please run :ZFVimIMSync to create database first'
         return
     endif
     
     " Use Python to add word to database
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     if !executable(pythonCmd)
-        echom '[ZFVimIM] Error: Python not found. Cannot add word to database.'
+        echom '[sbzr.vimi.m] Error: Python not found. Cannot add word to database.'
         return
     endif
     
@@ -392,7 +392,7 @@ function! IMAdd(bang, db, key, word)
     
     let scriptPath = pluginDir . '/misc/db_add_word.py'
     if !filereadable(scriptPath)
-        echom '[ZFVimIM] Error: Script not found: ' . scriptPath
+        echom '[sbzr.vimi.m] Error: Script not found: ' . scriptPath
         return
     endif
     
@@ -404,7 +404,7 @@ function! IMAdd(bang, db, key, word)
     let result = substitute(result, '[\r\n]', '', 'g')
     
     if result ==# 'OK'
-        echom '[ZFVimIM] Word added to database: ' . a:key . ' ' . a:word
+        echom '[sbzr.vimi.m] Word added to database: ' . a:key . ' ' . a:word
         " Clear cache to force reload
         if exists('g:ZFVimIM_db') && !empty(g:ZFVimIM_db)
             for db in g:ZFVimIM_db
@@ -422,9 +422,9 @@ function! IMAdd(bang, db, key, word)
             endfor
         endif
     elseif result ==# 'EXISTS'
-        echom '[ZFVimIM] Word already exists in database: ' . a:key . ' ' . a:word
+        echom '[sbzr.vimi.m] Word already exists in database: ' . a:key . ' ' . a:word
     else
-        echom '[ZFVimIM] Error: ' . result
+        echom '[sbzr.vimi.m] Error: ' . result
     endif
 endfunction
 function! IMRemove(bang, db, word, ...)
@@ -461,7 +461,7 @@ function! IMRemove(bang, db, word, ...)
     endif
     
     if empty(wordsToRemove)
-        echom '[ZFVimIM] Error: No words specified to remove'
+        echom '[sbzr.vimi.m] Error: No words specified to remove'
         return
     endif
     
@@ -492,14 +492,14 @@ function! IMRemove(bang, db, word, ...)
     endif
     
     if empty(dictPath) || !filereadable(dictPath)
-        echom '[ZFVimIM] Error: Dictionary file not found: ' . dictPath
+        echom '[sbzr.vimi.m] Error: Dictionary file not found: ' . dictPath
         return
     endif
     
     " Use Python to directly remove multiple words from file
     let pythonCmd = executable('python3') ? 'python3' : 'python'
     if !executable(pythonCmd)
-        echom '[ZFVimIM] Error: Python not found. Cannot edit dictionary file directly.'
+        echom '[sbzr.vimi.m] Error: Python not found. Cannot edit dictionary file directly.'
         return
     endif
     
@@ -676,23 +676,23 @@ function! IMRemove(bang, db, word, ...)
                                 let recordsMatch = matchstr(dbRemovedInfo, 'RECORDS:\d\+')
                                 let recordsCount = matchstr(recordsMatch, '\d\+')
                                 if !empty(recordsCount)
-                                    echom '[ZFVimIM] 模糊匹配删除完成: ' . removedInfo . ' (共删除 ' . recordsCount . ' 条数据库记录)'
+                                    echom '[sbzr.vimi.m] 模糊匹配删除完成: ' . removedInfo . ' (共删除 ' . recordsCount . ' 条数据库记录)'
                                 else
-                                    echom '[ZFVimIM] 模糊匹配删除完成: ' . removedInfo
+                                    echom '[sbzr.vimi.m] 模糊匹配删除完成: ' . removedInfo
                                 endif
-                                echom '[ZFVimIM] 实际删除的词: ' . wordsList
+                                echom '[sbzr.vimi.m] 实际删除的词: ' . wordsList
                             else
                                 if !empty(removedInfo)
-                                    echom '[ZFVimIM] Removed words from TXT and DB: ' . removedInfo
+                                    echom '[sbzr.vimi.m] Removed words from TXT and DB: ' . removedInfo
                                 else
-                                    echom '[ZFVimIM] Words removed from TXT and database'
+                                    echom '[sbzr.vimi.m] Words removed from TXT and database'
                                 endif
                             endif
                         else
                             if !empty(removedInfo)
-                                echom '[ZFVimIM] Removed words from TXT and DB: ' . removedInfo
+                                echom '[sbzr.vimi.m] Removed words from TXT and DB: ' . removedInfo
                             else
-                                echom '[ZFVimIM] Words removed from TXT and database'
+                                echom '[sbzr.vimi.m] Words removed from TXT and database'
                             endif
                         endif
                         
@@ -713,21 +713,21 @@ function! IMRemove(bang, db, word, ...)
                             endfor
                         endif
                     else
-                        echom '[ZFVimIM] Removed from TXT: ' . removedInfo . ' (but failed to remove from DB: ' . dbResult . ')'
+                        echom '[sbzr.vimi.m] Removed from TXT: ' . removedInfo . ' (but failed to remove from DB: ' . dbResult . ')'
                     endif
                 else
-                    echom '[ZFVimIM] Removed from TXT: ' . removedInfo . ' (script not found: ' . scriptPath . ')'
+                    echom '[sbzr.vimi.m] Removed from TXT: ' . removedInfo . ' (script not found: ' . scriptPath . ')'
                 endif
             else
-                echom '[ZFVimIM] Removed from TXT: ' . removedInfo . ' (Python not found, cannot remove from DB)'
+                echom '[sbzr.vimi.m] Removed from TXT: ' . removedInfo . ' (Python not found, cannot remove from DB)'
             endif
         else
-            echom '[ZFVimIM] Removed from TXT: ' . removedInfo . ' (DB file not found: ' . dbPath . ')'
+            echom '[sbzr.vimi.m] Removed from TXT: ' . removedInfo . ' (DB file not found: ' . dbPath . ')'
         endif
     elseif result ==# 'NOT_FOUND'
-        echom '[ZFVimIM] None of the words found in dictionary'
+        echom '[sbzr.vimi.m] None of the words found in dictionary'
     else
-        echom '[ZFVimIM] Error: ' . result
+        echom '[sbzr.vimi.m] Error: ' . result
     endif
     
     if a:bang == '!'
@@ -751,9 +751,9 @@ endfunction
 
 function! s:IMRemoveWrapper(bang, ...)
     if a:0 < 1
-        echom '[ZFVimIM] Error: Usage: IMRemove [--fuzzy|-f] <word1> [word2] [word3] ...'
-        echom '[ZFVimIM] Example: IMRemove 词1 词2 词3'
-        echom '[ZFVimIM] Example (fuzzy): IMRemove --fuzzy 鬻  (删除所有包含"鬻"的词)'
+        echom '[sbzr.vimi.m] Error: Usage: IMRemove [--fuzzy|-f] <word1> [word2] [word3] ...'
+        echom '[sbzr.vimi.m] Example: IMRemove 词1 词2 词3'
+        echom '[sbzr.vimi.m] Example (fuzzy): IMRemove --fuzzy 鬻  (删除所有包含"鬻"的词)'
         return
     endif
     " Call IMRemove with first word and remaining words as additional arguments
@@ -1644,7 +1644,7 @@ function! s:dbSave(db, dbFile, ...)
     " Show progress for large dictionaries
     let totalEntries = len(txtLines)
     if totalEntries > 10000
-        echom '[ZFVimIM] Preparing to save dictionary (' . totalEntries . ' entries)...'
+        echom '[sbzr.vimi.m] Preparing to save dictionary (' . totalEntries . ' entries)...'
         redraw
     endif
 
@@ -1672,7 +1672,7 @@ function! s:dbSave(db, dbFile, ...)
                 let cmd .= '"'
                 let result = system(cmd)
                 if v:shell_error == 0
-                    echom '[ZFVimIM] Dictionary saved successfully: ' . totalEntries . ' entries (using Python)'
+                    echom '[sbzr.vimi.m] Dictionary saved successfully: ' . totalEntries . ' entries (using Python)'
                     
                     " Also sync to database if .db file exists
                     let dbPath = s:dbLoad_findDbFile(a:dbFile)
@@ -1683,7 +1683,7 @@ function! s:dbSave(db, dbFile, ...)
                             let syncCmd = pythonCmd . ' "' . syncScript . '" "' . a:dbFile . '" "' . dbPath . '"'
                             let syncResult = system(syncCmd)
                             if v:shell_error != 0
-                                echom '[ZFVimIM] Warning: Failed to sync to database: ' . syncResult
+                                echom '[sbzr.vimi.m] Warning: Failed to sync to database: ' . syncResult
                             endif
                         endif
                     endif
@@ -1697,12 +1697,12 @@ function! s:dbSave(db, dbFile, ...)
     
     " Fallback to VimScript writefile
     if totalEntries > 10000
-        echom '[ZFVimIM] Writing to file (this may take a while for large dictionaries)...'
+        echom '[sbzr.vimi.m] Writing to file (this may take a while for large dictionaries)...'
         redraw
     endif
     
     if writefile(txtLines, a:dbFile) == 0
-        echom '[ZFVimIM] Dictionary saved successfully: ' . totalEntries . ' entries'
+        echom '[sbzr.vimi.m] Dictionary saved successfully: ' . totalEntries . ' entries'
         
         " Also sync to database if .db file exists
         let dbPath = s:dbLoad_findDbFile(a:dbFile)
@@ -1721,12 +1721,12 @@ function! s:dbSave(db, dbFile, ...)
                 if v:shell_error == 0
                     " Success - silently sync
                 else
-                    echom '[ZFVimIM] Warning: Failed to sync to database: ' . result
+                    echom '[sbzr.vimi.m] Warning: Failed to sync to database: ' . result
                 endif
             endif
         endif
     else
-        echom '[ZFVimIM] Error: Failed to save dictionary file'
+        echom '[sbzr.vimi.m] Error: Failed to save dictionary file'
     endif
     call ZFVimIM_DEBUG_profileStop()
     
@@ -1791,8 +1791,8 @@ function! s:dbEditWildKey(db, word, key, action)
     " For very large dictionaries, warn user and limit search
     let maxCheck = get(g:, 'ZFVimIM_wildKeySearchLimit', 50000)
     if totalItems > maxCheck
-        echom '[ZFVimIM] Dictionary is very large (' . totalItems . ' entries). Searching may take time...'
-        echom '[ZFVimIM] Tip: Specify key for instant removal: IMRemove ' . a:word . ' <key>'
+        echom '[sbzr.vimi.m] Dictionary is very large (' . totalItems . ' entries). Searching may take time...'
+        echom '[sbzr.vimi.m] Tip: Specify key for instant removal: IMRemove ' . a:word . ' <key>'
     endif
     
     let checkedCount = 0
@@ -1801,10 +1801,10 @@ function! s:dbEditWildKey(db, word, key, action)
             let checkedCount += 1
             " Limit search to prevent hanging on very large dictionaries
             if checkedCount > maxCheck
-                echom '[ZFVimIM] Warning: Search limit reached (' . maxCheck . ' entries).'
-                echom '[ZFVimIM] Please specify key explicitly: IMRemove ' . a:word . ' <key>'
+                echom '[sbzr.vimi.m] Warning: Search limit reached (' . maxCheck . ' entries).'
+                echom '[sbzr.vimi.m] Please specify key explicitly: IMRemove ' . a:word . ' <key>'
                 if !empty(keyToApply)
-                    echom '[ZFVimIM] Found ' . len(keyToApply) . ' key(s) so far. Continuing with those...'
+                    echom '[sbzr.vimi.m] Found ' . len(keyToApply) . ' key(s) so far. Continuing with those...'
                 endif
                 break
             endif
@@ -1822,19 +1822,19 @@ function! s:dbEditWildKey(db, word, key, action)
     endfor
 
     if empty(keyToApply)
-        echom '[ZFVimIM] Word not found: ' . a:word
+        echom '[sbzr.vimi.m] Word not found: ' . a:word
         if checkedCount >= maxCheck
-            echom '[ZFVimIM] Note: Search was limited. Word may exist in unchecked entries.'
-            echom '[ZFVimIM] Try: IMRemove ' . a:word . ' <key> (specify the key)'
+            echom '[sbzr.vimi.m] Note: Search was limited. Word may exist in unchecked entries.'
+            echom '[sbzr.vimi.m] Try: IMRemove ' . a:word . ' <key> (specify the key)'
         endif
         return
     endif
 
-    echom '[ZFVimIM] Found word in ' . len(keyToApply) . ' key(s). Removing...'
+    echom '[sbzr.vimi.m] Found word in ' . len(keyToApply) . ' key(s). Removing...'
     for key in keyToApply
         call s:dbEdit(db, a:word, key, a:action)
     endfor
-    echom '[ZFVimIM] Removed word from ' . len(keyToApply) . ' key(s).'
+    echom '[sbzr.vimi.m] Removed word from ' . len(keyToApply) . ' key(s).'
 endfunction
 
 function! s:dbEdit(db, word, key, action)
@@ -1922,17 +1922,17 @@ function! s:dbEditMap(db, dbEdit)
                         \ '^' . key . g:ZFVimIM_KEY_S_MAIN,
                         \ 0)
             if index < 0
-                echom '[ZFVimIM] Key not found: ' . key
+                echom '[sbzr.vimi.m] Key not found: ' . key
                 continue
             endif
             let dbItem = ZFVimIM_dbItemDecode(dbMap[key[0]][index])
             let wordIndex = index(dbItem['wordList'], word)
             if wordIndex < 0
-                echom '[ZFVimIM] Word "' . word . '" not found in key "' . key . '"'
-                echom '[ZFVimIM] Available words: ' . join(dbItem['wordList'], ', ')
+                echom '[sbzr.vimi.m] Word "' . word . '" not found in key "' . key . '"'
+                echom '[sbzr.vimi.m] Available words: ' . join(dbItem['wordList'], ', ')
                 continue
             endif
-            echom '[ZFVimIM] Removing word "' . word . '" from key "' . key . '"'
+            echom '[sbzr.vimi.m] Removing word "' . word . '" from key "' . key . '"'
             call remove(dbItem['wordList'], wordIndex)
             call remove(dbItem['countList'], wordIndex)
             if empty(dbItem['wordList'])
@@ -1941,11 +1941,11 @@ function! s:dbEditMap(db, dbEdit)
                     call remove(dbMap, key[0])
                 endif
                 call ZFVimIM_dbSearchCacheClear(a:db)
-                echom '[ZFVimIM] Key "' . key . '" removed (no words left)'
+                echom '[sbzr.vimi.m] Key "' . key . '" removed (no words left)'
             else
                 " Update the item in dbMap after removing word
                 let dbMap[key[0]][index] = ZFVimIM_dbItemEncode(dbItem)
-                echom '[ZFVimIM] Word removed. Remaining words: ' . join(dbItem['wordList'], ', ')
+                echom '[sbzr.vimi.m] Word removed. Remaining words: ' . join(dbItem['wordList'], ', ')
             endif
             call s:dbRebuildBucketIndex(a:db, key[0])
         elseif e['action'] == 'reorder'

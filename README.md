@@ -1,4 +1,4 @@
-# ZFVimIM - Neovim 中文输入法插件
+# sbzr.vimi.m - Neovim 中文输入法插件
 
 基于 [ZSaberLv0/ZFVimIM](https://github.com/ZSaberLv0/ZFVimIM)，适配 Neovim 0.11+。
 
@@ -16,7 +16,7 @@
 ### 1. 安装插件
 
 ```lua
--- ~/.config/nvim/lua/plugins/zfvimim.lua
+-- ~/.config/nvim/lua/plugins/sbzr.vimi.m.lua
 return {
   {
     "iamcheyan/ZFVimIM",
@@ -27,7 +27,7 @@ return {
 
 ### 2. 配置词库
 
-> 💡 **最简单方式**：复制配置文件到 `~/.config/nvim/lua/plugins/zfvimim.lua`，修改词库名称即可。
+> 💡 **最简单方式**：复制配置文件到 `~/.config/nvim/lua/plugins/sbzr.vimi.m.lua`，修改词库名称即可。
 
 **SBZR 模式（默认开启）**（声笔自然，4码后可用 a/e/u/i/o 快速选择）：
 
