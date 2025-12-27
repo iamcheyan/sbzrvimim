@@ -25,27 +25,7 @@ return {
 }
 ```
 
-### 2. 配置词库
-
-> 💡 **最简单方式**：复制配置文件到 `~/.config/nvim/lua/plugins/sbzr.vimi.m.lua`，修改词库名称即可。
-
-**SBZR 模式（默认开启）**（声笔自然，4码后可用 a/e/u/i/o 快速选择）：
-
-```lua
--- 默认词库为 dict/sbzr.yaml，可按需覆盖
-vim.g.zfvimim_default_dict_name = "sbzr"
-```
-
-**配置选项**：
-
-| 配置方式 | 变量 | 说明 |
-|---------|------|------|
-| 插件目录词库（推荐） | `vim.g.zfvimim_default_dict_name = "sbzr"` | 指定 `dict/` 目录下的文件名（不含扩展名） |
-| 自定义路径 | `vim.g.zfvimim_dict_path = "/path/to/dict.yaml"` | 指定完整路径 |
-
-**优先级**：`zfvimim_dict_path` > `zfvimim_default_dict_name`
-
-### 3. 使用输入法
+### 2. 使用输入法
 
 1. 按 `;;` 启动输入法
 2. 输入编码（SBZR模式）
@@ -53,8 +33,6 @@ vim.g.zfvimim_default_dict_name = "sbzr"
    - 输入4码后，可以使用 `a/e/u/i/o` 快速选择第2-6个候选词
    - `0-9` 选择，`<Space>` 选第一个，`,`/`.` 翻页
 4. 按 `;;` 再次切换关闭
-
-**演示**：![](assast/preview.gif)
 
 ## 核心功能
 
@@ -112,16 +90,6 @@ vim.g.zfvimim_default_dict_name = "sbzr"
 
 ## 配置
 
-### 词库配置
-
-```lua
--- 方法1：使用插件目录下的 SBZR 词库（推荐）
-vim.g.zfvimim_default_dict_name = "sbzr"
-
--- 方法2：使用自定义路径
-vim.g.zfvimim_dict_path = vim.fn.stdpath("config") .. "/zfvimim_db/dict.yaml"
-```
-
 ### 高级配置
 
 ```lua
@@ -146,8 +114,6 @@ vim.g.ZFVimIME_IMEStatus_tagL = ' <'  -- 左标签
 vim.g.ZFVimIME_IMEStatus_tagR = '> '  -- 右标签
 ```
 
-**跨数据库搜索演示**：![](assast/preview_crossdb.gif)
-
 ### 词库文件格式
 
 ```yaml
@@ -165,7 +131,6 @@ ceshi	测试	测时
 | 按键 | 功能 |
 |------|------|
 | `;;` | 切换输入法开/关（Normal/Insert/Visual 模式） |
-| `;:` | 切换到下一个字典数据库 |
 | `;,` | 打开添加词对话框 |
 | `;.` | 打开删除词对话框 |
 
@@ -192,12 +157,8 @@ ceshi	测试	测时
 **检查方法**：
 
 ```vim
-" 检查词库路径
-:lua print(vim.g.zfvimim_dict_path)
-:lua print(vim.g.zfvimim_default_dict_name)
-
-" 检查文件是否存在
-:lua print(vim.fn.filereadable("/path/to/dict.yaml"))
+" 检查词库文件是否存在
+:lua print(vim.fn.filereadable(vim.fn.stdpath("data") .. "/lazy/ZFVimIM/dict/sbzr.yaml"))
 
 " 查看错误信息
 :messages

@@ -73,9 +73,7 @@ if !exists('g:ZFVimIM_crossDbPos')
     let g:ZFVimIM_crossDbPos = 5
 endif
 
-if !exists('g:zfvimim_default_dict_name') || empty(g:zfvimim_default_dict_name)
-    let g:zfvimim_default_dict_name = 'sbzr'
-endif
+" Dictionary is fixed to sbzr.yaml
 
 if !exists('g:ZFVimIM_cachePath')
     let g:ZFVimIM_cachePath = get(g:, 'zf_vim_cache_path', $HOME . '/.vim_cache') . '/ZFVimIM'
@@ -329,17 +327,8 @@ function! IMAdd(bang, db, key, word)
     endif
     let dictDir = pluginDir . '/dict'
     
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let dictPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-    else
-        let dictPath = dictDir . '/default.yaml'
-    endif
+    " Use sbzr.yaml as the only dictionary
+    let dictPath = dictDir . '/sbzr.yaml'
     
     if empty(dictPath) || !filereadable(dictPath)
         echom '[sbzr.vimi.m] Error: Dictionary file not found: ' . dictPath
@@ -478,17 +467,8 @@ function! IMRemove(bang, db, word, ...)
         endif
         let dictDir = pluginDir . '/dict'
         
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let dictPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let dictPath = expand(g:zfvimim_dict_path)
-        else
-            let dictPath = dictDir . '/default.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let dictPath = dictDir . '/sbzr.yaml'
     endif
     
     if empty(dictPath) || !filereadable(dictPath)

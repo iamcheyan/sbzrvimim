@@ -93,31 +93,17 @@ function! s:ZFVimIM_getYamlPath(dbPath)
         return yamlPath
     endif
     
-    " Try with default_dict_name if set
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let yamlPath = dictDir . '/' . defaultDictName
-        if filereadable(yamlPath)
-            return yamlPath
-        endif
-    endif
-    
-    " Try zfvimim_dict_path if set
-    if exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let yamlPath = expand(g:zfvimim_dict_path)
-        if filereadable(yamlPath)
-            return yamlPath
-        endif
+    " Use sbzr.yaml as default
+    let yamlPath = dictDir . '/sbzr.yaml'
+    if filereadable(yamlPath)
+        return yamlPath
     endif
     
     " Last resort: return dict directory path
     return yamlPath
 endfunction
 
-" Auto load default dictionary if zfvimim_dict_path is set or use default
+" Auto load sbzr dictionary
 function! s:ZFVimIM_autoLoadDict()
     let dictPath = ''
     
@@ -130,36 +116,12 @@ function! s:ZFVimIM_autoLoadDict()
     endif
     let dictDir = pluginDir . '/dict'
     
-    " Determine default dictionary name
-    " If zfvimim_default_dict_name is set, use it; otherwise use sbzr.yaml
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-    else
-        let defaultDictName = 'sbzr'
-    endif
-    " Add .yaml extension if not present
-    if defaultDictName !~ '\.yaml$'
-        let defaultDictName = defaultDictName . '.yaml'
-    endif
-    let defaultDict = dictDir . '/' . defaultDictName
+    " Use sbzr.yaml as the only dictionary
+    let defaultDict = dictDir . '/sbzr.yaml'
     
-    " Check if zfvimim_dict_path is set
-    if exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let customDictPath = expand(g:zfvimim_dict_path)
-        " If custom dict path is set, check if file exists
-        if filereadable(customDictPath)
-            let dictPath = customDictPath
-        else
-            " Custom dict file doesn't exist, fallback to default
-            if filereadable(defaultDict)
-                let dictPath = defaultDict
-            endif
-        endif
-    else
-        " Use default dictionary if zfvimim_dict_path is not set
-        if filereadable(defaultDict)
-            let dictPath = defaultDict
-        endif
+    " Use sbzr dictionary
+    if filereadable(defaultDict)
+        let dictPath = defaultDict
     endif
     
     " Load dictionary if path is valid and file exists
@@ -386,10 +348,6 @@ if get(g:, 'ZFVimIM_keymap', 1)
     nnoremap <expr><silent> ;; ZFVimIME_keymap_toggle_n()
     inoremap <expr><silent> ;; ZFVimIME_keymap_toggle_i()
     vnoremap <expr><silent> ;; ZFVimIME_keymap_toggle_v()
-
-    nnoremap <expr><silent> ;: ZFVimIME_keymap_next_n()
-    inoremap <expr><silent> ;: ZFVimIME_keymap_next_i()
-    vnoremap <expr><silent> ;: ZFVimIME_keymap_next_v()
 
     nnoremap <expr><silent> ;, ZFVimIME_keymap_add_n()
     inoremap <expr><silent> ;, ZFVimIME_keymap_add_i()
@@ -2211,19 +2169,8 @@ function! s:addWord(dbId, key, word)
         endif
         let dictDir = pluginDir . '/dict'
         
-        " Default dictionary is default.yaml
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let dictPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let dictPath = expand(g:zfvimim_dict_path)
-        else
-            " Default dictionary: default.yaml
-            let dictPath = dictDir . '/default.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let dictPath = dictDir . '/sbzr.yaml'
     endif
     
     if !empty(dictPath)
@@ -2340,18 +2287,8 @@ function! s:removeWord(dbId, key, word)
         let dictDir = pluginDir . '/dict'
         
         " Default dictionary is default.yaml
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let dictPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let dictPath = expand(g:zfvimim_dict_path)
-        else
-            " Default dictionary: default.yaml
-                let dictPath = dictDir . '/default.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let dictPath = dictDir . '/sbzr.yaml'
     endif
     
     " Remove the word
@@ -2823,17 +2760,8 @@ function! s:updateWordFrequencyInDb(key, word, increment)
     endif
     let dictDir = pluginDir . '/dict'
     
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let dictPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-    else
-        let dictPath = dictDir . '/default.yaml'
-    endif
+    " Use sbzr.yaml as the only dictionary
+    let dictPath = dictDir . '/sbzr.yaml'
     
     if empty(dictPath)
         return
@@ -3361,21 +3289,8 @@ function! s:cleanupDictionaryOnExit()
     endif
     let dictDir = pluginDir . '/dict'
     
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let dictPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-        " Ensure it's .yaml file for cleanup script
-        if dictPath =~ '\.db$'
-            let dictPath = s:ZFVimIM_getYamlPath(dictPath)
-        endif
-    else
-        let dictPath = dictDir . '/default.yaml'
-    endif
+        " Use sbzr.yaml as the only dictionary
+        let dictPath = dictDir . '/sbzr.yaml'
     
     if empty(dictPath) || !filereadable(dictPath)
         return
@@ -3591,23 +3506,8 @@ function! ZFVimIM_cleanupDictionary()
         endif
         let dictDir = pluginDir . '/dict'
         
-        " Default dictionary is default.yaml
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let dictPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let dictPath = expand(g:zfvimim_dict_path)
-            " Ensure it's .yaml file for cleanup script
-            if dictPath =~ '\.db$'
-                let dictPath = s:ZFVimIM_getYamlPath(dictPath)
-            endif
-        else
-            " Default dictionary: default.yaml
-                let dictPath = dictDir . '/default.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let dictPath = dictDir . '/sbzr.yaml'
     endif
     
     " Skip if dictionary file doesn't exist or is not readable
@@ -3700,20 +3600,8 @@ function! ZFVimIM_refreshAll()
             else
                 " Try to get from autoLoadDict logic
                 let dictDir = pluginDir . '/dict'
-                if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-                    let defaultDictName = g:zfvimim_default_dict_name
-                    if defaultDictName !~ '\.yaml$'
-                        let defaultDictName = defaultDictName . '.yaml'
-                    endif
-                    let dictPath = dictDir . '/' . defaultDictName
-                elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-                    let dictPath = expand(g:zfvimim_dict_path)
-                    if dictPath =~ '\.db$'
-                        let dictPath = s:ZFVimIM_getYamlPath(dictPath)
-                    endif
-                else
-                    let dictPath = dictDir . '/default.yaml'
-                endif
+                " Use sbzr.yaml as the only dictionary
+                let dictPath = dictDir . '/sbzr.yaml'
             endif
             
             if !empty(dictPath) && filereadable(dictPath)
@@ -3804,17 +3692,8 @@ function! ZFVimIM_importTxtToDb(...)
         endif
     else
         " Use default logic
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let yamlPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let yamlPath = expand(g:zfvimim_dict_path)
-        else
-            let yamlPath = dictDir . '/default.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let yamlPath = dictDir . '/sbzr.yaml'
     endif
     
     " Skip if TXT file doesn't exist
@@ -3901,26 +3780,9 @@ function! ZFVimIM_exportDbToTxt()
     endif
     let dictDir = pluginDir . '/dict'
     
-    " Determine database file path
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        " Get YAML path first
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let yamlPath = dictDir . '/' . defaultDictName
-        let dbPath = s:ZFVimIM_getDbPath(yamlPath)
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-        " Convert .yaml to .db
-        if dictPath =~ '\.yaml$'
-            let dbPath = s:ZFVimIM_getDbPath(dictPath)
-        elseif dictPath =~ '\.db$'
-            let dbPath = dictPath
-        else
-            " Assume it's a YAML file without extension
-            let dbPath = s:ZFVimIM_getDbPath(dictPath . '.yaml')
-        endif
+    " Use sbzr.yaml as the only dictionary
+    let yamlPath = dictDir . '/sbzr.yaml'
+    let dbPath = s:ZFVimIM_getDbPath(yamlPath)
     else
         let yamlPath = dictDir . '/default.yaml'
         let dbPath = s:ZFVimIM_getDbPath(yamlPath)
@@ -3992,18 +3854,8 @@ function! ZFVimIM_syncTxtToDb()
     endif
     let dictDir = pluginDir . '/dict'
     
-    " Determine TXT file path
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let yamlPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let yamlPath = expand(g:zfvimim_dict_path)
-    else
-        let yamlPath = dictDir . '/default.yaml'
-    endif
+    " Use sbzr.yaml as the only dictionary
+    let yamlPath = dictDir . '/sbzr.yaml'
     
     " Skip if TXT file doesn't exist
     if empty(yamlPath) || !filereadable(yamlPath)
@@ -4099,53 +3951,22 @@ function! ZFVimIM_showInfo()
     if !exists('g:ZFVimIM_db') || empty(g:ZFVimIM_db)
         echo "❌ 未加载任何词库"
         echo ""
-        echo "配置信息:"
-        if exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            echo "  zfvimim_dict_path: " . g:zfvimim_dict_path
-            if filereadable(g:zfvimim_dict_path)
-                let mtime = getftime(g:zfvimim_dict_path)
-                if mtime > 0
-                    echo "    文件存在，最后修改: " . strftime('%Y-%m-%d %H:%M:%S', mtime)
-                    let fileSize = getfsize(g:zfvimim_dict_path)
-                    if fileSize > 0
-                        if fileSize < 1024
-                            echo "    文件大小: " . fileSize . " B"
-                        elseif fileSize < 1024 * 1024
-                            echo "    文件大小: " . (fileSize / 1024.0) . " KB"
-                        else
-                            echo "    文件大小: " . (fileSize / (1024.0 * 1024.0)) . " MB"
-                        endif
-                    endif
-                else
-                    echo "    文件存在"
-                endif
-            else
-                echo "    ⚠️  文件不存在"
-            endif
+        echo "词库: sbzr.yaml (固定)"
+        let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
+        let sfileDir = expand('<sfile>:p:h:h')
+        if isdirectory(sfileDir . '/dict')
+            let pluginDir = sfileDir
         endif
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            echo "  zfvimim_default_dict_name: " . g:zfvimim_default_dict_name
-            " Try to find the dictionary file
-            let pluginDir = stdpath('data') . '/lazy/ZFVimIM'
-            let sfileDir = expand('<sfile>:p:h:h')
-            if isdirectory(sfileDir . '/dict')
-                let pluginDir = sfileDir
+        let dictDir = pluginDir . '/dict'
+        let defaultDict = dictDir . '/sbzr.yaml'
+        if filereadable(defaultDict)
+            echo "  词库文件: " . defaultDict
+            let mtime = getftime(defaultDict)
+            if mtime > 0
+                echo "    最后修改: " . strftime('%Y-%m-%d %H:%M:%S', mtime)
             endif
-            let dictDir = pluginDir . '/dict'
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let defaultDict = dictDir . '/' . defaultDictName
-            if filereadable(defaultDict)
-                echo "    默认词库文件: " . defaultDict
-                let mtime = getftime(defaultDict)
-                if mtime > 0
-                    echo "      最后修改: " . strftime('%Y-%m-%d %H:%M:%S', mtime)
-                endif
-            else
-                echo "    ⚠️  默认词库文件不存在: " . defaultDict
-            endif
+        else
+            echo "  ⚠️  词库文件不存在: " . defaultDict
         endif
         echo ""
         echo "提示: 如果词库应该已加载，请尝试:"
@@ -4236,12 +4057,6 @@ function! ZFVimIM_showInfo()
     
     " Show configuration
     echo "配置信息:"
-    if exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        echo "  zfvimim_dict_path: " . g:zfvimim_dict_path
-    endif
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        echo "  zfvimim_default_dict_name: " . g:zfvimim_default_dict_name
-    endif
     if exists('g:ZFVimIM_matchLimit')
         echo "  ZFVimIM_matchLimit: " . g:ZFVimIM_matchLimit
     endif
@@ -4284,17 +4099,8 @@ function! ZFVimIM_showInfo()
         endif
         let dictDir = pluginDir . '/dict'
         
-        if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-            let defaultDictName = g:zfvimim_default_dict_name
-            if defaultDictName !~ '\.yaml$'
-                let defaultDictName = defaultDictName . '.yaml'
-            endif
-            let yamlPath = dictDir . '/' . defaultDictName
-        elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-            let yamlPath = expand(g:zfvimim_dict_path)
-        else
-            let yamlPath = dictDir . '/sbzr.yaml'
-        endif
+        " Use sbzr.yaml as the only dictionary
+        let yamlPath = dictDir . '/sbzr.yaml'
     endif
     
     if empty(yamlPath) || !filereadable(yamlPath)
@@ -4367,17 +4173,8 @@ function! ZFVimIM_batchAddWords(...)
     let dictDir = pluginDir . '/dict'
     
     " Determine dictionary path
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let dictPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-    else
-        let dictPath = dictDir . '/default.yaml'
-    endif
+    " Use sbzr.yaml as the only dictionary
+    let dictPath = dictDir . '/sbzr.yaml'
     
     " Check if dictionary file exists
     if !filereadable(dictPath)
@@ -4465,17 +4262,8 @@ function! s:ZFVimIM_processBatchAdd()
             endif
             let dictDir = pluginDir . '/dict'
             
-            if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-                let defaultDictName = g:zfvimim_default_dict_name
-                if defaultDictName !~ '\.yaml$'
-                    let defaultDictName = defaultDictName . '.yaml'
-                endif
-                let dictPath = dictDir . '/' . defaultDictName
-            elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-                let dictPath = expand(g:zfvimim_dict_path)
-            else
-                let dictPath = dictDir . '/default.yaml'
-            endif
+            " Use sbzr.yaml as the only dictionary
+            let dictPath = dictDir . '/sbzr.yaml'
         endif
     endif
     
@@ -4666,17 +4454,8 @@ function! ZFVimIM_editDict()
     let dictDir = pluginDir . '/dict'
     
     " Determine dictionary path
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let dictPath = dictDir . '/' . defaultDictName
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-    else
-        let dictPath = dictDir . '/default.yaml'
-    endif
+    " Use sbzr.yaml as the only dictionary
+    let dictPath = dictDir . '/sbzr.yaml'
     
     " Get database file path
     let dbPath = s:ZFVimIM_getDbPath(dictPath)
@@ -4798,17 +4577,8 @@ function! s:ZFVimIM_processEditDict()
             endif
             let dictDir = pluginDir . '/dict'
             
-            if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-                let defaultDictName = g:zfvimim_default_dict_name
-                if defaultDictName !~ '\.yaml$'
-                    let defaultDictName = defaultDictName . '.yaml'
-                endif
-                let dictPath = dictDir . '/' . defaultDictName
-            elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-                let dictPath = expand(g:zfvimim_dict_path)
-            else
-                let dictPath = dictDir . '/default.yaml'
-            endif
+            " Use sbzr.yaml as the only dictionary
+            let dictPath = dictDir . '/sbzr.yaml'
             let dbPath = s:ZFVimIM_getDbPath(dictPath)
         endif
     endif
@@ -5001,26 +4771,9 @@ function! ZFVimIM_backupDict(...)
     endif
     let dictDir = pluginDir . '/dict'
     
-    " Determine database file path
-    if exists('g:zfvimim_default_dict_name') && !empty(g:zfvimim_default_dict_name)
-        let defaultDictName = g:zfvimim_default_dict_name
-        " Get YAML path first
-        if defaultDictName !~ '\.yaml$'
-            let defaultDictName = defaultDictName . '.yaml'
-        endif
-        let yamlPath = dictDir . '/' . defaultDictName
-        let dbPath = s:ZFVimIM_getDbPath(yamlPath)
-    elseif exists('g:zfvimim_dict_path') && !empty(g:zfvimim_dict_path)
-        let dictPath = expand(g:zfvimim_dict_path)
-        " Convert .yaml to .db
-        if dictPath =~ '\.yaml$'
-            let dbPath = s:ZFVimIM_getDbPath(dictPath)
-        elseif dictPath =~ '\.db$'
-            let dbPath = dictPath
-        else
-            " Assume it's a YAML file without extension
-            let dbPath = s:ZFVimIM_getDbPath(dictPath . '.yaml')
-        endif
+    " Use sbzr.yaml as the only dictionary
+    let yamlPath = dictDir . '/sbzr.yaml'
+    let dbPath = s:ZFVimIM_getDbPath(yamlPath)
     else
         let yamlPath = dictDir . '/default.yaml'
         let dbPath = s:ZFVimIM_getDbPath(yamlPath)
