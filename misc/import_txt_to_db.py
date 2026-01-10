@@ -42,7 +42,8 @@ def clean_and_sort_txt_file(txt_file):
     print('=' * 60)
     
     # 读取并处理文件
-    key_to_words = {}  # key -> list of words (去重)
+    # key -> list of (word, freq_str or None), keep first-seen order
+    key_to_words = {}
     total_lines = 0
     processed_lines = 0
     
@@ -56,12 +57,9 @@ def clean_and_sort_txt_file(txt_file):
                 continue
             
             # 处理转义空格
-            if '\\ ' in line:
-                parts = line.replace('\\ ', '_ZFVimIM_space_').split()
-                words = [w.replace('_ZFVimIM_space_', ' ') for w in parts[1:]]
-            else:
-                parts = line.split()
-                words = parts[1:]
+            line_tmp = line.replace('\\ ', '_ZFVimIM_space_')
+            parts = line_tmp.split()
+            words = parts[1:]
             
             if len(parts) < 2:
                 continue
@@ -74,10 +72,35 @@ def clean_and_sort_txt_file(txt_file):
                 key_to_words[key] = []
             
             # 添加到列表（保持顺序，但去重）
-            for word in words:
-                word = word.strip()
-                if word and word not in key_to_words[key]:
-                    key_to_words[key].append(word)
+            for word_part in words:
+                word_part = word_part.strip()
+                if not word_part:
+                    continue
+                if ':' in word_part:
+                    word_raw, freq_str = word_part.rsplit(':', 1)
+                else:
+                    word_raw, freq_str = word_part, None
+                word = word_raw.replace('_ZFVimIM_space_', ' ')
+                # Dedup by word, keep higher freq if provided
+                exists_index = None
+                for i, (existing_word, existing_freq) in enumerate(key_to_words[key]):
+                    if existing_word == word:
+                        exists_index = i
+                        break
+                if exists_index is None:
+                    key_to_words[key].append((word, freq_str))
+                else:
+                    if freq_str is not None:
+                        existing_word, existing_freq = key_to_words[key][exists_index]
+                        if existing_freq is None:
+                            key_to_words[key][exists_index] = (existing_word, freq_str)
+                        else:
+                            try:
+                                if int(freq_str) > int(existing_freq):
+                                    key_to_words[key][exists_index] = (existing_word, freq_str)
+                            except ValueError:
+                                # Keep existing if new freq is invalid
+                                pass
     
     print(f'读取完成: 总行数 {total_lines}, 处理行数 {processed_lines}')
     print(f'发现 {len(key_to_words)} 个编码')
@@ -99,7 +122,13 @@ def clean_and_sort_txt_file(txt_file):
             if not words:
                 continue
             # 转义空格
-            escaped_words = [w.replace(' ', '\\ ') for w in words]
+            escaped_words = []
+            for word, freq_str in words:
+                escaped_word = word.replace(' ', '\\ ')
+                if freq_str is not None:
+                    escaped_words.append(f'{escaped_word}:{freq_str}')
+                else:
+                    escaped_words.append(escaped_word)
             f.write(f'{key} {" ".join(escaped_words)}\n')
     
     print(f'整理完成！')
@@ -211,7 +240,7 @@ def import_txt_to_db(txt_file, db_file):
                 
                 total_lines += 1
                 
-                # 格式: key word1 word2 ...
+                # 格式: key word1[:freq] word2[:freq] ...
                 # 处理转义空格
                 line_tmp = line.replace('\\ ', '_ZFVimIM_space_')
                 parts = line_tmp.split()
@@ -224,16 +253,25 @@ def import_txt_to_db(txt_file, db_file):
                 words = parts[1:]
                 
                 # 处理每个词，按原始顺序设置词频
-                # 根据词的数量动态计算词频：第一个词频率最高（等于词数），依次递减
+                # 若词带有 :freq 则使用指定频次；否则按顺序递减
                 word_count = len(words)
                 
                 for idx, word_part in enumerate(words):
-                    word = word_part.replace('_ZFVimIM_space_', ' ')
+                    if ':' in word_part:
+                        word_raw, freq_str = word_part.rsplit(':', 1)
+                    else:
+                        word_raw, freq_str = word_part, None
+                    word = word_raw.replace('_ZFVimIM_space_', ' ')
                     total_words += 1
-                    
-                    # 按原始顺序设置词频：第一个词频率 = 词数，依次递减到 1
-                    # 例如：10个词 -> 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-                    frequency = word_count - idx
+                    if freq_str is None:
+                        # 按原始顺序设置词频：第一个词频率 = 词数，依次递减到 1
+                        # 例如：10个词 -> 10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+                        frequency = word_count - idx
+                    else:
+                        try:
+                            frequency = int(freq_str)
+                        except ValueError:
+                            frequency = word_count - idx
                     
                     # 添加到批量插入列表
                     batch.append((key, word, frequency))
@@ -313,4 +351,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

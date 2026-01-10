@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-从数据库导出到 YAML 文件
+从数据库导出到 YAML 文件（保留词频）
 
 用法:
     python3 db_export_to_txt.py <db_file> [txt_file]
@@ -33,15 +33,17 @@ def export_db_to_txt(db_file, txt_file):
         conn = sqlite3.connect(db_file)
         cursor = conn.cursor()
         
-        # 读取所有数据，按 key 分组
-        cursor.execute('SELECT key, word FROM words ORDER BY key, word')
+        # 读取所有数据，按 key 分组并按频率排序
+        cursor.execute('SELECT key, word, frequency FROM words ORDER BY key, frequency DESC, word')
         rows = cursor.fetchall()
         conn.close()
         
         # 按 key 分组组织数据
         key_words_map = defaultdict(list)
-        for key, word in rows:
-            key_words_map[key].append(word)
+        for key, word, frequency in rows:
+            if frequency is None:
+                frequency = 0
+            key_words_map[key].append((word, frequency))
         
         # 如果 YAML 文件已存在，删除它
         if os.path.exists(txt_file):
@@ -52,10 +54,13 @@ def export_db_to_txt(db_file, txt_file):
         with open(txt_file, 'w', encoding='utf-8') as f:
             # 按 key 排序
             for key in sorted(key_words_map.keys()):
-                words = key_words_map[key]
+                word_freqs = key_words_map[key]
                 # 转义空格：将空格替换为 \ 
-                escaped_words = [word.replace(' ', '\\ ') for word in words]
-                # 格式：key word1 word2 word3 ...
+                escaped_words = []
+                for word, frequency in word_freqs:
+                    escaped_word = word.replace(' ', '\\ ')
+                    escaped_words.append(f'{escaped_word}:{frequency}')
+                # 格式：key word:freq ...
                 line = key + ' ' + ' '.join(escaped_words)
                 f.write(line + '\n')
         
@@ -94,4 +99,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

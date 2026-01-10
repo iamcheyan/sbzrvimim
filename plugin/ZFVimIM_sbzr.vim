@@ -364,6 +364,9 @@ function! s:sbzrHintItems(key, limit) abort
     if idx < 0
         return []
     endif
+    let bestWord = ''
+    let bestKey = ''
+    let bestLen = 0
     while idx < len(bucket) && len(ret) < limit
         let item = ZFVimIM_dbItemDecode(bucket[idx])
         let k = get(item, 'key', '')
@@ -374,20 +377,34 @@ function! s:sbzrHintItems(key, limit) abort
             let wordList = get(item, 'wordList', [])
             if !empty(wordList)
                 let word = wordList[0]
-                call add(ret, {
-                            \ 'dbId' : get(db, 'dbId', 0),
-                            \ 'len' : len(a:key),
-                            \ 'word' : word,
-                            \ 'displayWord' : word,
-                            \ 'key' : k,
-                            \ 'type' : 'match',
-                            \ 'hint' : 1,
-                            \ })
-                break
+                for w in wordList
+                    if strchars(w) < strchars(word)
+                        let word = w
+                    endif
+                endfor
+                if bestLen == 0 || strchars(word) < bestLen
+                    let bestWord = word
+                    let bestKey = k
+                    let bestLen = strchars(word)
+                    if bestLen == 1
+                        break
+                    endif
+                endif
             endif
         endif
         let idx += 1
     endwhile
+    if !empty(bestWord)
+        call add(ret, {
+                    \ 'dbId' : get(db, 'dbId', 0),
+                    \ 'len' : len(a:key),
+                    \ 'word' : bestWord,
+                    \ 'displayWord' : bestWord,
+                    \ 'key' : bestKey,
+                    \ 'type' : 'match',
+                    \ 'hint' : 1,
+                    \ })
+    endif
     return ret
 endfunction
 
@@ -462,9 +479,9 @@ endfunction
 
 function! s:hook_tab_move(direction) abort
     if a:direction > 0
-        call ZFVimIME_chooseIndex(1)
+        call ZFVimIME_pageDown('<tab>')
     else
-        call ZFVimIME_chooseIndex(-1)
+        call ZFVimIME_pageUp('<s-tab>')
     endif
     return 1
 endfunction
